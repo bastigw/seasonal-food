@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import seasonalData from './data/seasonal.json'
 import CountryTabs from './components/CountryTabs.vue'
 import CountrySelect from './components/CountrySelect.vue'
@@ -52,28 +52,56 @@ function shiftMonth(delta) {
   else if (month > 12) month = 1
   selectedMonth.value = month
 }
+
+// In standalone mode the selector bar is pinned to the bottom of the
+// viewport, so the food list needs matching padding-bottom to avoid
+// being hidden behind it. Measure the bar so that padding stays exact
+// as its content (flags, translations, safe-area insets) changes.
+const footerEl = ref(null)
+const footerHeight = ref(0)
+let footerObserver
+
+onMounted(() => {
+  if (footerEl.value && typeof ResizeObserver !== 'undefined') {
+    footerObserver = new ResizeObserver(([entry]) => {
+      footerHeight.value = entry.target.offsetHeight
+    })
+    footerObserver.observe(footerEl.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  footerObserver?.disconnect()
+})
 </script>
 
 <template>
   <div class="min-h-dvh bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
-    <div class="mx-auto flex max-w-md flex-col">
-      <nav
-        class="sticky top-0 z-10 order-1 flex gap-1 border-b border-stone-200 bg-stone-50/90 px-3 pt-3 backdrop-blur standalone:static standalone:z-auto standalone:order-3 standalone:border-b-0 standalone:border-t dark:border-stone-800 dark:bg-stone-950/90"
-        aria-label="Country"
+    <div class="mx-auto flex max-w-md flex-col standalone:min-h-dvh">
+      <div
+        ref="footerEl"
+        class="order-1 standalone:order-2 standalone:sticky standalone:bottom-0 standalone:z-20 standalone:border-t standalone:border-stone-200 standalone:bg-stone-50/90 standalone:pb-[env(safe-area-inset-bottom)] standalone:backdrop-blur dark:standalone:border-stone-800 dark:standalone:bg-stone-950/90"
       >
-        <CountryTabs :countries="mainCountries" v-model="selectedCountry" />
-        <CountrySelect :countries="otherCountries" v-model="selectedCountry" />
-      </nav>
-      <MonthSwitcher
-        class="order-2 standalone:order-4"
-        :label="monthLabel"
-        :month-names="monthNames"
-        v-model="selectedMonth"
-        @prev="shiftMonth(-1)"
-        @next="shiftMonth(1)"
-      />
+        <nav
+          class="sticky top-0 z-10 flex gap-1 border-b border-stone-200 bg-stone-50/90 px-3 pt-3 backdrop-blur standalone:static standalone:z-auto standalone:border-b-0 dark:border-stone-800 dark:bg-stone-950/90"
+          aria-label="Country"
+        >
+          <CountryTabs :countries="mainCountries" v-model="selectedCountry" />
+          <CountrySelect :countries="otherCountries" v-model="selectedCountry" />
+        </nav>
+        <MonthSwitcher
+          :label="monthLabel"
+          :month-names="monthNames"
+          v-model="selectedMonth"
+          @prev="shiftMonth(-1)"
+          @next="shiftMonth(1)"
+        />
+      </div>
 
-      <main class="order-3 px-4 pb-12 standalone:order-1">
+      <main
+        class="order-2 px-4 pb-12 standalone:order-1 standalone:flex-1 standalone:pb-[var(--footer-h)] standalone:pt-[calc(env(safe-area-inset-top)_+_1.5rem)]"
+        :style="{ '--footer-h': footerHeight ? `${footerHeight}px` : '7rem' }"
+      >
         <Transition name="fade" mode="out-in">
           <div :key="`${selectedCountry}-${selectedMonth}`">
             <EmptyState v-if="isEmpty" label="Nothing tracked for this month yet." />
@@ -94,7 +122,7 @@ function shiftMonth(delta) {
           </div>
         </Transition>
 
-        <p class="pt-4 text-center text-xs text-stone-400 dark:text-stone-600">
+        <p class="pt-4 text-center text-xs text-stone-400 dark:text-stone-600 standalone:pt-2">
           Data from EUFIC (eufic.org)
         </p>
       </main>
