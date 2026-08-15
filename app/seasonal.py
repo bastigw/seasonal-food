@@ -3,7 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
-from .produce_groups import GROUP_ORDER, group_for
+from .produce_groups import GROUP_ICONS, GROUP_ORDER, group_for, icon_for
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "eufic_seasonal_produce_matrix.json"
 
@@ -96,7 +96,11 @@ def get_seasonal(month: int, country: str) -> Dict[str, Dict[str, List[dict]]]:
             months = country_info.get(state, [])
             if month in months:
                 buckets[state][category][group].append(
-                    {"name": _display_name(name), "stage": _season_stage(months, month)}
+                    {
+                        "name": _display_name(name),
+                        "stage": _season_stage(months, month),
+                        "icon": icon_for(name, category),
+                    }
                 )
 
     result: Dict[str, Dict[str, List[dict]]] = {}
@@ -108,7 +112,13 @@ def get_seasonal(month: int, country: str) -> Dict[str, Dict[str, List[dict]]]:
                 items = groups.get(group_name)
                 if items:
                     items.sort(key=lambda item: item["name"])
-                    ordered_groups.append({"group": group_name, "items": items})
+                    ordered_groups.append(
+                        {
+                            "group": group_name,
+                            "icon": GROUP_ICONS[category][group_name],
+                            "items": items,
+                        }
+                    )
             result[state][category] = ordered_groups
 
     return result

@@ -12,42 +12,42 @@ function readHash() {
   const params = new URLSearchParams(window.location.hash.slice(1))
   const country = params.get('country')
   const month = Number(params.get('month'))
-  const year = Number(params.get('year'))
   return {
     country: countries.some((c) => c.code === country) ? country : null,
     month: month >= 1 && month <= 12 ? month : null,
-    year: Number.isInteger(year) ? year : null,
   }
 }
 
 const today = new Date()
 const initial = readHash()
 
-const selectedCountry = ref(initial.country ?? 'DE')
+const selectedCountry = ref(initial.country ?? 'GB')
 const selectedMonth = ref(initial.month ?? today.getMonth() + 1)
-const selectedYear = ref(initial.year ?? today.getFullYear())
 
-watch([selectedCountry, selectedMonth, selectedYear], ([country, month, year]) => {
-  const params = new URLSearchParams({ country, month: String(month), year: String(year) })
+watch([selectedCountry, selectedMonth], ([country, month]) => {
+  const params = new URLSearchParams({ country, month: String(month) })
   history.replaceState(null, '', `#${params.toString()}`)
 })
 
 const monthLabel = computed(() => monthNames[selectedMonth.value - 1])
 const currentCountry = computed(() => countries.find((c) => c.code === selectedCountry.value))
 const seasonal = computed(() => data[selectedCountry.value][String(selectedMonth.value)])
-const freshGroups = computed(() => [...seasonal.value.fresh.vegetable, ...seasonal.value.fresh.fruit])
-const storedGroups = computed(() => [...seasonal.value.stored.vegetable, ...seasonal.value.stored.fruit])
-const isEmpty = computed(() => freshGroups.value.length === 0 && storedGroups.value.length === 0)
+const freshVeg = computed(() => seasonal.value.fresh.vegetable)
+const freshFruit = computed(() => seasonal.value.fresh.fruit)
+const storedVeg = computed(() => seasonal.value.stored.vegetable)
+const storedFruit = computed(() => seasonal.value.stored.fruit)
+const isEmpty = computed(
+  () =>
+    !freshVeg.value.length &&
+    !freshFruit.value.length &&
+    !storedVeg.value.length &&
+    !storedFruit.value.length
+)
 
 function shiftMonth(delta) {
   let month = selectedMonth.value + delta
-  if (month < 1) {
-    month = 12
-    selectedYear.value -= 1
-  } else if (month > 12) {
-    month = 1
-    selectedYear.value += 1
-  }
+  if (month < 1) month = 12
+  else if (month > 12) month = 1
   selectedMonth.value = month
 }
 </script>
@@ -56,12 +56,7 @@ function shiftMonth(delta) {
   <div class="min-h-dvh bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
     <div class="mx-auto max-w-md">
       <CountryTabs :countries="countries" v-model="selectedCountry" />
-      <MonthSwitcher
-        :label="monthLabel"
-        :year="selectedYear"
-        @prev="shiftMonth(-1)"
-        @next="shiftMonth(1)"
-      />
+      <MonthSwitcher :label="monthLabel" @prev="shiftMonth(-1)" @next="shiftMonth(1)" />
 
       <main class="px-4 pb-12">
         <p
@@ -75,8 +70,18 @@ function shiftMonth(delta) {
           <div :key="`${selectedCountry}-${selectedMonth}`">
             <EmptyState v-if="isEmpty" label="Nothing tracked for this month yet." />
             <template v-else>
-              <ProduceSection title="Fresh this month" :groups="freshGroups" tone="fresh" />
-              <ProduceSection title="Still in season, from storage" :groups="storedGroups" tone="stored" />
+              <ProduceSection
+                title="Fresh this month"
+                :vegetable-groups="freshVeg"
+                :fruit-groups="freshFruit"
+                tone="fresh"
+              />
+              <ProduceSection
+                title="Still in season, from storage"
+                :vegetable-groups="storedVeg"
+                :fruit-groups="storedFruit"
+                tone="stored"
+              />
             </template>
           </div>
         </Transition>

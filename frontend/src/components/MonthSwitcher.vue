@@ -3,7 +3,6 @@ import { IconChevronLeft, IconChevronRight } from '@tabler/icons-vue'
 
 defineProps({
   label: { type: String, required: true },
-  year: { type: Number, required: true },
 })
 defineEmits(['prev', 'next'])
 </script>
@@ -18,8 +17,8 @@ defineEmits(['prev', 'next'])
     >
       <IconChevronLeft :size="20" :stroke-width="2" />
     </button>
-    <h1 class="min-w-[11rem] text-center text-lg font-semibold tracking-tight">
-      {{ label }} {{ year }}
+    <h1 class="min-w-[9rem] text-center text-lg font-semibold tracking-tight">
+      {{ label }}
     </h1>
     <button
       type="button"

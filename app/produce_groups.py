@@ -249,3 +249,102 @@ GROUP_ORDER = {
 def group_for(name: str, category: str) -> str:
     groups = VEGETABLE_GROUPS if category == "vegetable" else FRUIT_GROUPS
     return groups.get(name, "Other")
+
+
+# One icon per subcategory, used as a fallback when an item has no more
+# specific icon of its own (see *_ICON_OVERRIDES below).
+VEGETABLE_GROUP_ICONS = {
+    "Leafy Greens & Salad": "\U0001F96C",  # leafy green
+    "Brassicas & Cabbages": "\U0001F966",  # broccoli
+    "Root & Tuber Vegetables": "\U0001F955",  # carrot
+    "Alliums": "\U0001F9C5",  # onion
+    "Legumes & Pods": "\U0001FAD8",  # beans
+    "Fruiting Vegetables": "\U0001F345",  # tomato
+    "Stems & Shoots": "\U0001F331",  # seedling
+    "Mushrooms & Fungi": "\U0001F344",  # mushroom
+    "Other": "\U0001F33F",  # herb
+}
+
+FRUIT_GROUP_ICONS = {
+    "Pome Fruit": "\U0001F34E",  # red apple
+    "Stone Fruit": "\U0001F351",  # peach
+    "Berries": "\U0001FAD0",  # blueberries
+    "Citrus": "\U0001F34A",  # tangerine
+    "Melons": "\U0001F348",  # melon
+    "Tropical & Exotic": "\U0001F96D",  # mango
+    "Other": "\U0001F347",  # grapes
+}
+
+GROUP_ICONS = {
+    "vegetable": VEGETABLE_GROUP_ICONS,
+    "fruit": FRUIT_GROUP_ICONS,
+}
+
+# Specific icons for items that have a well-known emoji of their own,
+# distinct enough from their group's default to be worth calling out
+# (e.g. potato vs. carrot within Root & Tuber Vegetables).
+VEGETABLE_ICON_OVERRIDES = {
+    "aubergine": "\U0001F346",  # eggplant
+    "bell pepper": "\U0001FAD1",  # bell pepper
+    "green bell pepper": "\U0001FAD1",
+    "potato": "\U0001F954",  # potato
+    "new potato": "\U0001F954",
+    "sweet potato": "\U0001F954",
+    "taro": "\U0001F954",
+    "garlic": "\U0001F9C4",  # garlic
+    "wild garlic": "\U0001F9C4",
+    "ramson": "\U0001F9C4",
+    "pea": "\U0001FADB",  # pea pod
+    "snap pea": "\U0001FADB",
+    "snow pea": "\U0001FADB",
+    "mangetout": "\U0001FADB",
+    "black eyed pea": "\U0001FADB",
+    "cucumber": "\U0001F952",  # cucumber
+    "gherkin": "\U0001F952",
+    "pickle": "\U0001F952",
+    "chayote": "\U0001F952",
+    "courgette": "\U0001F952",
+    "chili": "🌶",  # hot pepper
+    "pumpkin": "\U0001F383",  # jack-o-lantern
+    "squash": "\U0001F383",
+    "butternut squash": "\U0001F383",
+    "marrow": "\U0001F383",
+    "sweet corn": "\U0001F33D",  # corn
+    "cabbage": "\U0001F96C",
+    "chinese cabbage": "\U0001F96C",
+    "oxheart cabbage": "\U0001F96C",
+    "red cabbage": "\U0001F96C",
+    "savoy cabbage": "\U0001F96C",
+    "summer cabbage": "\U0001F96C",
+    "white cabbage": "\U0001F96C",
+    "brussels sprout": "\U0001F96C",
+    "pak choi": "\U0001F96C",
+    "olive": "\U0001FAD2",  # olive
+}
+
+FRUIT_ICON_OVERRIDES = {
+    "pear": "\U0001F350",  # pear
+    "quince": "\U0001F350",
+    "medlar": "\U0001F350",
+    "cherry": "\U0001F352",  # cherries
+    "cherry plum": "\U0001F352",
+    "strawberry": "\U0001F353",  # strawberry
+    "lemon": "\U0001F34B",  # lemon
+    "watermelon": "\U0001F349",  # watermelon
+    "banana": "\U0001F34C",  # banana
+    "avocado": "\U0001F951",  # avocado
+    "kiwi": "\U0001F95D",  # kiwi fruit
+    "pineapple": "\U0001F34D",  # pineapple
+}
+
+ICON_OVERRIDES = {
+    "vegetable": VEGETABLE_ICON_OVERRIDES,
+    "fruit": FRUIT_ICON_OVERRIDES,
+}
+
+
+def icon_for(name: str, category: str) -> str:
+    overrides = ICON_OVERRIDES["vegetable" if category == "vegetable" else "fruit"]
+    if name in overrides:
+        return overrides[name]
+    return GROUP_ICONS[category][group_for(name, category)]
