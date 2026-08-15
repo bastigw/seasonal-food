@@ -15,7 +15,7 @@ const flag = computed(
 
 <template>
   <div
-    class="relative flex flex-none items-center gap-0.5 self-start rounded-t-xl border-b-2 px-2 pb-3 pt-2 text-sm font-medium transition-colors"
+    class="relative flex flex-none items-center gap-0.5 self-start overflow-hidden rounded-t-xl border-b-2 px-2 pb-3 pt-2 text-sm font-medium transition-colors"
     :class="
       isSelected
         ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-400'

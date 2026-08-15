@@ -19,7 +19,7 @@ defineEmits(['prev', 'next', 'update:modelValue'])
     >
       <IconChevronLeft :size="20" :stroke-width="2" />
     </button>
-    <div class="relative flex min-w-[9rem] items-center justify-center gap-1 rounded-lg px-2 py-1 transition hover:bg-stone-200 dark:hover:bg-stone-800">
+    <div class="relative flex min-w-[9rem] items-center justify-center gap-1 overflow-hidden rounded-lg px-2 py-1 transition hover:bg-stone-200 dark:hover:bg-stone-800">
       <h1 class="text-center text-lg font-semibold tracking-tight">
         {{ label }}
       </h1>
