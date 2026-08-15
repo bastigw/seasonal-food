@@ -1,10 +1,12 @@
 <script setup>
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-vue'
+import { IconChevronLeft, IconChevronRight, IconChevronDown } from '@tabler/icons-vue'
 
 defineProps({
   label: { type: String, required: true },
+  monthNames: { type: Array, required: true },
+  modelValue: { type: Number, required: true },
 })
-defineEmits(['prev', 'next'])
+defineEmits(['prev', 'next', 'update:modelValue'])
 </script>
 
 <template>
@@ -17,9 +19,22 @@ defineEmits(['prev', 'next'])
     >
       <IconChevronLeft :size="20" :stroke-width="2" />
     </button>
-    <h1 class="min-w-[9rem] text-center text-lg font-semibold tracking-tight">
-      {{ label }}
-    </h1>
+    <div class="relative flex min-w-[9rem] items-center justify-center gap-1 rounded-lg px-2 py-1 transition hover:bg-stone-200 dark:hover:bg-stone-800">
+      <h1 class="text-center text-lg font-semibold tracking-tight">
+        {{ label }}
+      </h1>
+      <IconChevronDown :size="16" :stroke-width="2" class="text-stone-400 dark:text-stone-500" />
+      <select
+        class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
+        aria-label="Select month"
+        :value="modelValue"
+        @change="$emit('update:modelValue', Number($event.target.value))"
+      >
+        <option v-for="(name, index) in monthNames" :key="name" :value="index + 1">
+          {{ name }}
+        </option>
+      </select>
+    </div>
     <button
       type="button"
       aria-label="Next month"

@@ -64,7 +64,13 @@ function shiftMonth(delta) {
         <CountryTabs :countries="mainCountries" v-model="selectedCountry" />
         <CountrySelect :countries="otherCountries" v-model="selectedCountry" />
       </nav>
-      <MonthSwitcher :label="monthLabel" @prev="shiftMonth(-1)" @next="shiftMonth(1)" />
+      <MonthSwitcher
+        :label="monthLabel"
+        :month-names="monthNames"
+        v-model="selectedMonth"
+        @prev="shiftMonth(-1)"
+        @next="shiftMonth(1)"
+      />
 
       <main class="px-4 pb-12">
         <Transition name="fade" mode="out-in">
