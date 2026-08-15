@@ -56,15 +56,16 @@ function shiftMonth(delta) {
 
 <template>
   <div class="min-h-dvh bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
-    <div class="mx-auto max-w-md">
+    <div class="mx-auto flex max-w-md flex-col">
       <nav
-        class="sticky top-0 z-10 flex gap-1 border-b border-stone-200 bg-stone-50/90 px-3 pt-3 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90"
+        class="sticky top-0 z-10 order-1 flex gap-1 border-b border-stone-200 bg-stone-50/90 px-3 pt-3 backdrop-blur standalone:static standalone:z-auto standalone:order-3 standalone:border-b-0 standalone:border-t dark:border-stone-800 dark:bg-stone-950/90"
         aria-label="Country"
       >
         <CountryTabs :countries="mainCountries" v-model="selectedCountry" />
         <CountrySelect :countries="otherCountries" v-model="selectedCountry" />
       </nav>
       <MonthSwitcher
+        class="order-2 standalone:order-4"
         :label="monthLabel"
         :month-names="monthNames"
         v-model="selectedMonth"
@@ -72,7 +73,7 @@ function shiftMonth(delta) {
         @next="shiftMonth(1)"
       />
 
-      <main class="px-4 pb-12">
+      <main class="order-3 px-4 pb-12 standalone:order-1">
         <Transition name="fade" mode="out-in">
           <div :key="`${selectedCountry}-${selectedMonth}`">
             <EmptyState v-if="isEmpty" label="Nothing tracked for this month yet." />

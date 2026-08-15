@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant standalone (@media (display-mode: standalone));
+
 :root {
   font-family: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
 }
