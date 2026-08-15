@@ -6,14 +6,14 @@
 # Seasonal Food
 
 A mobile-first webpage showing what fruit and vegetables are currently in
-season (fresh and stored) in the UK and Germany, plus Italy and Spain
-(major growers whose produce commonly ends up on UK and German shelves),
-based on
+season (fresh and stored), based on
 [EUFIC](https://www.eufic.org/en/explore-seasonal-fruit-and-vegetables-in-europe)
-data bundled in this repo (`eufic_seasonal_produce_matrix.json`).
+data bundled in this repo (`eufic_seasonal_produce_matrix.json`). The UK,
+Germany, Italy and Spain get dedicated tabs; every other European country
+in the EUFIC data is available from the dropdown next to them.
 
-Switch between countries with the tabs at the top and step through months
-with the arrows, all client-side, no reloads. Produce is grouped into
+Switch between countries with the tabs (or dropdown) at the top and step
+through months with the arrows, all client-side, no reloads. Produce is grouped into
 grocery-style subcategories (Leafy Greens & Salad, Root & Tuber Vegetables,
 Stone Fruit, Berries, etc. - see `app/produce_groups.py`), and each item is
 tagged **early** / **peak** / **ending** based on where the month falls
@@ -24,8 +24,8 @@ essentially year-round get no tag.
 
 - `app/seasonal.py` and `app/produce_groups.py` hold the seasonality logic
   (pure Python, no dependencies).
-- `scripts/generate_data.py` runs that logic for all 4 countries x all 12
-  months and writes `frontend/src/data/seasonal.json`.
+- `scripts/generate_data.py` runs that logic for every country in the EUFIC
+  data x all 12 months and writes `frontend/src/data/seasonal.json`.
 - `frontend/` is a Vite + Vue 3 + Tailwind CSS app. It imports that JSON at
   build time and bundles it in, so the shipped site is fully static: no
   backend, no API, no runtime environment variables.

@@ -2,11 +2,14 @@
 import { ref, computed, watch } from 'vue'
 import seasonalData from './data/seasonal.json'
 import CountryTabs from './components/CountryTabs.vue'
+import CountrySelect from './components/CountrySelect.vue'
 import MonthSwitcher from './components/MonthSwitcher.vue'
 import ProduceSection from './components/ProduceSection.vue'
 import EmptyState from './components/EmptyState.vue'
 
 const { countries, monthNames, data } = seasonalData
+const mainCountries = countries.filter((c) => c.main)
+const otherCountries = countries.filter((c) => !c.main)
 
 function readHash() {
   const params = new URLSearchParams(window.location.hash.slice(1))
@@ -30,7 +33,6 @@ watch([selectedCountry, selectedMonth], ([country, month]) => {
 })
 
 const monthLabel = computed(() => monthNames[selectedMonth.value - 1])
-const currentCountry = computed(() => countries.find((c) => c.code === selectedCountry.value))
 const seasonal = computed(() => data[selectedCountry.value][String(selectedMonth.value)])
 const freshVeg = computed(() => seasonal.value.fresh.vegetable)
 const freshFruit = computed(() => seasonal.value.fresh.fruit)
@@ -55,17 +57,16 @@ function shiftMonth(delta) {
 <template>
   <div class="min-h-dvh bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
     <div class="mx-auto max-w-md">
-      <CountryTabs :countries="countries" v-model="selectedCountry" />
+      <nav
+        class="sticky top-0 z-10 flex gap-1 border-b border-stone-200 bg-stone-50/90 px-3 pt-3 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90"
+        aria-label="Country"
+      >
+        <CountryTabs :countries="mainCountries" v-model="selectedCountry" />
+        <CountrySelect :countries="otherCountries" v-model="selectedCountry" />
+      </nav>
       <MonthSwitcher :label="monthLabel" @prev="shiftMonth(-1)" @next="shiftMonth(1)" />
 
       <main class="px-4 pb-12">
-        <p
-          v-if="currentCountry.note"
-          class="mb-4 text-sm text-stone-500 dark:text-stone-400"
-        >
-          {{ currentCountry.note }}
-        </p>
-
         <Transition name="fade" mode="out-in">
           <div :key="`${selectedCountry}-${selectedMonth}`">
             <EmptyState v-if="isEmpty" label="Nothing tracked for this month yet." />
