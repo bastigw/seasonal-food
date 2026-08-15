@@ -1,5 +1,8 @@
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import CollapsibleSection from './CollapsibleSection.vue'
+
+const props = defineProps({
   title: { type: String, required: true },
   vegetableGroups: { type: Array, required: true },
   fruitGroups: { type: Array, required: true },
@@ -20,23 +23,37 @@ const chipTone = {
       'border-stone-200 bg-stone-100 text-stone-600 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400',
   },
 }
+
+const countOf = (groups) => groups.reduce((sum, group) => sum + group.items.length, 0)
+const vegCount = computed(() => countOf(props.vegetableGroups))
+const fruitCount = computed(() => countOf(props.fruitGroups))
 </script>
 
 <template>
-  <section v-if="vegetableGroups.length || fruitGroups.length" class="mb-6">
-    <h2 class="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">
+  <section v-if="vegetableGroups.length || fruitGroups.length" class="mb-5">
+    <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">
       {{ title }}
     </h2>
 
-    <div v-if="vegetableGroups.length" class="mb-4">
-      <h3 class="mb-2 flex items-center gap-1.5 text-sm font-semibold text-stone-700 dark:text-stone-200">
-        <span aria-hidden="true">🥕</span> Vegetables
-      </h3>
-      <div v-for="group in vegetableGroups" :key="group.group" class="mb-3">
-        <p class="mb-1.5 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">
-          <span aria-hidden="true">{{ group.icon }}</span> {{ group.group }}
-        </p>
-        <div class="flex flex-wrap gap-1.5">
+    <CollapsibleSection
+      v-if="vegetableGroups.length"
+      icon="🥕"
+      label="Vegetables"
+      :count="vegCount"
+      size="category"
+      class="mb-1 border-b border-stone-200 dark:border-stone-800"
+    >
+      <CollapsibleSection
+        v-for="group in vegetableGroups"
+        :key="group.group"
+        :icon="group.icon"
+        :label="group.group"
+        :count="group.items.length"
+        size="group"
+        :default-open="false"
+        class="border-t border-stone-100 first:border-t-0 dark:border-stone-900"
+      >
+        <div class="flex flex-wrap gap-1.5 pb-2">
           <span
             v-for="item in group.items"
             :key="item.name"
@@ -48,18 +65,27 @@ const chipTone = {
             <span v-if="item.stage" class="opacity-60">({{ item.stage }})</span>
           </span>
         </div>
-      </div>
-    </div>
+      </CollapsibleSection>
+    </CollapsibleSection>
 
-    <div v-if="fruitGroups.length">
-      <h3 class="mb-2 flex items-center gap-1.5 text-sm font-semibold text-stone-700 dark:text-stone-200">
-        <span aria-hidden="true">🍎</span> Fruit
-      </h3>
-      <div v-for="group in fruitGroups" :key="group.group" class="mb-3">
-        <p class="mb-1.5 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">
-          <span aria-hidden="true">{{ group.icon }}</span> {{ group.group }}
-        </p>
-        <div class="flex flex-wrap gap-1.5">
+    <CollapsibleSection
+      v-if="fruitGroups.length"
+      icon="🍎"
+      label="Fruit"
+      :count="fruitCount"
+      size="category"
+    >
+      <CollapsibleSection
+        v-for="group in fruitGroups"
+        :key="group.group"
+        :icon="group.icon"
+        :label="group.group"
+        :count="group.items.length"
+        size="group"
+        :default-open="false"
+        class="border-t border-stone-100 first:border-t-0 dark:border-stone-900"
+      >
+        <div class="flex flex-wrap gap-1.5 pb-2">
           <span
             v-for="item in group.items"
             :key="item.name"
@@ -71,7 +97,7 @@ const chipTone = {
             <span v-if="item.stage" class="opacity-60">({{ item.stage }})</span>
           </span>
         </div>
-      </div>
-    </div>
+      </CollapsibleSection>
+    </CollapsibleSection>
   </section>
 </template>
