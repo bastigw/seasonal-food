@@ -5,13 +5,18 @@ defineProps({
   icon: { type: String, required: true },
   label: { type: String, required: true },
   count: { type: Number, required: true },
-  defaultOpen: { type: Boolean, default: true },
+  modelValue: { type: Boolean, required: true },
   size: { type: String, default: 'group' }, // 'category' | 'group'
 })
+const emit = defineEmits(['update:modelValue'])
+
+function onToggle(event) {
+  emit('update:modelValue', event.target.open)
+}
 </script>
 
 <template>
-  <details :open="defaultOpen">
+  <details :open="modelValue" @toggle="onToggle">
     <summary
       class="flex cursor-pointer items-center justify-between gap-2 py-1.5"
       :class="
