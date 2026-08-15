@@ -4,7 +4,7 @@ __pycache__/
 *.egg-info/
 .eggs/
 
-# Env / secrets (unused by the app now, but never commit these)
+# Env / secrets (never commit these)
 .env
 .env.*
 
