@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Env / secrets (unused by the app now, but never commit these)
+.env
+.env.*
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+
+# Generated at build time by scripts/generate_data.py
+frontend/src/data/seasonal.json
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
