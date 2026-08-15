@@ -1,3 +1,5 @@
+<img src="assets/logo.png" alt="" width="64" height="64" />
+
 # Seasonal Food
 
 A mobile-first webpage showing what fruit and vegetables are currently in
