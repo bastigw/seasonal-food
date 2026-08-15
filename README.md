@@ -1,4 +1,7 @@
-<img src="assets/logo.png" alt="" width="64" height="64" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.png" />
+  <img src="assets/logo.png" alt="" width="64" height="64" />
+</picture>
 
 # Seasonal Food
 
