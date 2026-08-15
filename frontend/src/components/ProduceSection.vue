@@ -28,10 +28,12 @@ const chipTone = {
 // expanded, so there's no point making them start closed.
 const SMALL_GROUP_THRESHOLD = 3
 
+const isSmall = (group) => group.items.length <= SMALL_GROUP_THRESHOLD
+
 function initialOpenState(groups) {
   const state = {}
   for (const group of groups) {
-    state[group.group] = group.items.length <= SMALL_GROUP_THRESHOLD
+    state[group.group] = isSmall(group)
   }
   return reactive(state)
 }
@@ -46,6 +48,10 @@ function toggleAllVeg() {
   const next = !allVegOpen.value
   for (const group of props.vegetableGroups) vegGroupOpen[group.group] = next
 }
+function resetVeg() {
+  vegOpen.value = true
+  for (const group of props.vegetableGroups) vegGroupOpen[group.group] = isSmall(group)
+}
 
 const fruitOpen = ref(true)
 const fruitGroupOpen = initialOpenState(props.fruitGroups)
@@ -54,6 +60,10 @@ const allFruitOpen = computed(() => props.fruitGroups.every((g) => fruitGroupOpe
 function toggleAllFruit() {
   const next = !allFruitOpen.value
   for (const group of props.fruitGroups) fruitGroupOpen[group.group] = next
+}
+function resetFruit() {
+  fruitOpen.value = true
+  for (const group of props.fruitGroups) fruitGroupOpen[group.group] = isSmall(group)
 }
 </script>
 
@@ -72,7 +82,14 @@ function toggleAllFruit() {
       size="category"
       class="mb-1 border-b border-stone-200 dark:border-stone-800"
     >
-      <div v-if="vegetableGroups.length > 1" class="flex justify-end pb-1">
+      <div v-if="vegetableGroups.length > 1" class="flex items-center justify-end gap-3 pb-1">
+        <button
+          type="button"
+          class="text-xs font-medium text-stone-500 hover:underline dark:text-stone-400"
+          @click="resetVeg"
+        >
+          Reset
+        </button>
         <button
           type="button"
           class="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
@@ -114,7 +131,14 @@ function toggleAllFruit() {
       :count="fruitCount"
       size="category"
     >
-      <div v-if="fruitGroups.length > 1" class="flex justify-end pb-1">
+      <div v-if="fruitGroups.length > 1" class="flex items-center justify-end gap-3 pb-1">
+        <button
+          type="button"
+          class="text-xs font-medium text-stone-500 hover:underline dark:text-stone-400"
+          @click="resetFruit"
+        >
+          Reset
+        </button>
         <button
           type="button"
           class="text-xs font-medium text-amber-700 hover:underline dark:text-amber-400"
