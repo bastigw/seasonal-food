@@ -1,13 +1,22 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import CollapsibleSection from './CollapsibleSection.vue'
+import { strings } from '../i18n/strings.js'
 
 const props = defineProps({
   title: { type: String, required: true },
   vegetableGroups: { type: Array, required: true },
   fruitGroups: { type: Array, required: true },
   tone: { type: String, required: true }, // 'fresh' | 'stored'
+  lang: { type: String, default: 'en' },
 })
+
+const t = computed(() => strings[props.lang])
+
+function stageLabel(stage) {
+  const key = `stage${stage.charAt(0).toUpperCase()}${stage.slice(1)}`
+  return t.value[key] ?? stage
+}
 
 const chipTone = {
   fresh: {
@@ -77,7 +86,7 @@ function resetFruit() {
       v-if="vegetableGroups.length"
       v-model="vegOpen"
       icon="🥕"
-      label="Vegetables"
+      :label="t.vegetables"
       :count="vegCount"
       size="category"
       class="mb-1 border-b border-stone-200 dark:border-stone-800"
@@ -88,14 +97,14 @@ function resetFruit() {
           class="text-xs font-medium text-stone-500 hover:underline dark:text-stone-400"
           @click="resetVeg"
         >
-          Reset
+          {{ t.reset }}
         </button>
         <button
           type="button"
           class="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
           @click="toggleAllVeg"
         >
-          {{ allVegOpen ? 'Collapse all' : 'Expand all' }}
+          {{ allVegOpen ? t.collapseAll : t.expandAll }}
         </button>
       </div>
       <CollapsibleSection
@@ -103,7 +112,7 @@ function resetFruit() {
         :key="group.group"
         v-model="vegGroupOpen[group.group]"
         :icon="group.icon"
-        :label="group.group"
+        :label="group.label"
         :count="group.items.length"
         size="group"
         class="border-t border-stone-100 first:border-t-0 dark:border-stone-900"
@@ -117,7 +126,7 @@ function resetFruit() {
           >
             <span aria-hidden="true">{{ item.icon }}</span>
             {{ item.name }}
-            <span v-if="item.stage" class="opacity-60">({{ item.stage }})</span>
+            <span v-if="item.stage" class="opacity-60">({{ stageLabel(item.stage) }})</span>
           </span>
         </div>
       </CollapsibleSection>
@@ -127,7 +136,7 @@ function resetFruit() {
       v-if="fruitGroups.length"
       v-model="fruitOpen"
       icon="🍎"
-      label="Fruit"
+      :label="t.fruit"
       :count="fruitCount"
       size="category"
     >
@@ -137,14 +146,14 @@ function resetFruit() {
           class="text-xs font-medium text-stone-500 hover:underline dark:text-stone-400"
           @click="resetFruit"
         >
-          Reset
+          {{ t.reset }}
         </button>
         <button
           type="button"
           class="text-xs font-medium text-amber-700 hover:underline dark:text-amber-400"
           @click="toggleAllFruit"
         >
-          {{ allFruitOpen ? 'Collapse all' : 'Expand all' }}
+          {{ allFruitOpen ? t.collapseAll : t.expandAll }}
         </button>
       </div>
       <CollapsibleSection
@@ -152,7 +161,7 @@ function resetFruit() {
         :key="group.group"
         v-model="fruitGroupOpen[group.group]"
         :icon="group.icon"
-        :label="group.group"
+        :label="group.label"
         :count="group.items.length"
         size="group"
         class="border-t border-stone-100 first:border-t-0 dark:border-stone-900"
@@ -166,7 +175,7 @@ function resetFruit() {
           >
             <span aria-hidden="true">{{ item.icon }}</span>
             {{ item.name }}
-            <span v-if="item.stage" class="opacity-60">({{ item.stage }})</span>
+            <span v-if="item.stage" class="opacity-60">({{ stageLabel(item.stage) }})</span>
           </span>
         </div>
       </CollapsibleSection>

@@ -1,19 +1,24 @@
 <script setup>
+import { computed } from 'vue'
 import { IconChevronLeft, IconChevronRight, IconChevronDown } from '@tabler/icons-vue'
+import { strings } from '../i18n/strings.js'
 
-defineProps({
+const props = defineProps({
   label: { type: String, required: true },
   monthNames: { type: Array, required: true },
   modelValue: { type: Number, required: true },
+  lang: { type: String, default: 'en' },
 })
 defineEmits(['prev', 'next', 'update:modelValue'])
+
+const t = computed(() => strings[props.lang])
 </script>
 
 <template>
   <div class="flex items-center justify-center gap-4 px-4 py-4">
     <button
       type="button"
-      aria-label="Previous month"
+      :aria-label="t.prevMonth"
       class="rounded-full p-2 text-stone-500 transition hover:bg-stone-200 active:scale-95 dark:text-stone-400 dark:hover:bg-stone-800"
       @click="$emit('prev')"
     >
@@ -26,7 +31,7 @@ defineEmits(['prev', 'next', 'update:modelValue'])
       <IconChevronDown :size="16" :stroke-width="2" class="text-stone-400 dark:text-stone-500" />
       <select
         class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
-        aria-label="Select month"
+        :aria-label="t.selectMonth"
         :value="modelValue"
         @change="$emit('update:modelValue', Number($event.target.value))"
       >
@@ -37,7 +42,7 @@ defineEmits(['prev', 'next', 'update:modelValue'])
     </div>
     <button
       type="button"
-      aria-label="Next month"
+      :aria-label="t.nextMonth"
       class="rounded-full p-2 text-stone-500 transition hover:bg-stone-200 active:scale-95 dark:text-stone-400 dark:hover:bg-stone-800"
       @click="$emit('next')"
     >

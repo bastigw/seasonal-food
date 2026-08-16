@@ -1,12 +1,15 @@
 <script setup>
 import { computed } from 'vue'
+import { strings } from '../i18n/strings.js'
 
 const props = defineProps({
   countries: { type: Array, required: true },
   modelValue: { type: String, required: true },
+  lang: { type: String, default: 'en' },
 })
 defineEmits(['update:modelValue'])
 
+const t = computed(() => strings[props.lang])
 const isSelected = computed(() => props.countries.some((c) => c.code === props.modelValue))
 const flag = computed(
   () => props.countries.find((c) => c.code === props.modelValue)?.flag ?? '\u{1F310}'
@@ -37,11 +40,11 @@ const flag = computed(
     </svg>
     <select
       class="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
-      aria-label="More countries"
+      :aria-label="t.moreCountries"
       :value="isSelected ? modelValue : ''"
       @change="$emit('update:modelValue', $event.target.value)"
     >
-      <option value="" disabled>More countries</option>
+      <option value="" disabled>{{ t.moreCountries }}</option>
       <option v-for="country in countries" :key="country.code" :value="country.code">
         {{ country.flag }} {{ country.label }}
       </option>
