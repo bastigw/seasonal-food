@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "generate-data": "python3 ../scripts/generate_data.py",
+    "generate-data": "cd .. && python3 -m pipeline.build",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

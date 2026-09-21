@@ -3,35 +3,57 @@
   <img src="assets/logo.png" alt="" width="64" height="64" />
 </picture>
 
-# Seasonal Food
+# Climate Impact of Produce
 
-A mobile-first webpage showing what fruit and vegetables are currently in
-season (fresh and stored), based on
-[EUFIC](https://www.eufic.org/en/explore-seasonal-fruit-and-vegetables-in-europe)
-data bundled in this repo (`eufic_seasonal_produce_matrix.json`). The UK,
-Germany, Italy and Spain get dedicated tabs; every other European country
-in the EUFIC data is available from the dropdown next to them.
+A mobile-first webpage showing the estimated climate impact (kg CO2e per
+500 g) of the fruit and vegetables people typically buy in a supermarket,
+for **Germany** and the **UK**, month by month. Each item shows a coloured
+bar (green / amber / red) for the footprint of its **most likely supply
+route** that month, plus how likely it is to have travelled a short or a
+long way. Everyday items only (~30), grouped into a few broad categories,
+sorted best to worst.
 
-Switch between countries with the tabs (or dropdown) at the top and step
-through months with the arrows, all client-side, no reloads. Produce is grouped into
-grocery-style subcategories (Leafy Greens & Salad, Root & Tuber Vegetables,
-Stone Fruit, Berries, etc. - see `app/produce_groups.py`), and each item is
-tagged **early** / **peak** / **ending** based on where the month falls
-within its contiguous in-season window for that country. Items in season
-essentially year-round get no tag.
+The numbers are a **modelled estimate from trade statistics, not a
+measurement**.
+
+## How the numbers are made
+
+For each item x country x month the pipeline estimates the mix of supply
+scenarios (domestic field / stored / heated glasshouse, nearby import,
+overseas by sea, overseas by air) and reports the footprint of the most
+likely one:
+
+- **Imports by origin and month:** Eurostat Comext (DE) and HMRC OTS (UK),
+  2023-2025 average. Intra-EU trade is recorded by country of dispatch, so
+  re-export hubs (NL/BE) are handled explicitly - see `hubReexport` /
+  `originRef` in `data/items.json`.
+- **Domestic supply:** Eurostat annual production (incl. "under glass"),
+  spread over the months the EUFIC seasonality matrix says the item is
+  sold. Glasshouse output outside the field season counts as heated.
+- **Footprint:** per-item production value (approximate, after Poore &
+  Nemecek 2018 via Our World in Data) plus transport (distance x mode
+  factor, DEFRA/GLEC-style). Air-freight shares, glasshouse months and
+  production values are assumptions in `data/items.json` and should be
+  reviewed before quoting single numbers.
+
+Known limitations: exports of domestic produce are ignored; UK production
+data ends 2019/2020; Comext has no transport-mode data, so air freight is
+an explicit per-item assumption.
 
 ## Architecture
 
-- `app/seasonal.py` and `app/produce_groups.py` hold the seasonality logic
-  (pure Python, no dependencies).
-- `scripts/generate_data.py` runs that logic for every country in the EUFIC
-  data x all 12 months and writes `frontend/src/data/seasonal.json`.
-- `frontend/` is a Vite + Vue 3 + Tailwind CSS app. It imports that JSON at
-  build time and bundles it in, so the shipped site is fully static: no
-  backend, no API, no runtime environment variables.
-- The `Dockerfile` is a 3-stage build: Python generates the data, Node
-  builds the static site, and the final image is just `nginx:alpine`
-  serving the result.
+- `data/items.json` - curated items, footprints, thresholds, transport
+  factors. `data/origins.json` - origin coordinates and road/sea mode.
+- `data/raw/` - committed snapshot of the downloaded trade and production
+  data. Refresh with `python3 -m pipeline.fetch` (needs network).
+- `pipeline/` - pure-Python (stdlib only) model: `scenarios.py`,
+  `footprint.py`, `build.py` (offline; writes
+  `frontend/src/data/impact.json`). Tests: `python3 -m unittest discover
+  -s pipeline/tests -t .`
+- `frontend/` - Vite + Vue 3 + Tailwind CSS. The JSON is bundled at build
+  time, so the shipped site is fully static.
+- `Dockerfile` - 3 stages: Python runs the tests and builds the data, Node
+  builds the site, `nginx:alpine` serves it.
 
 ## Deploying with Portainer (no registry, just GitHub)
 

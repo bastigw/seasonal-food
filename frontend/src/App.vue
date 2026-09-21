@@ -1,21 +1,13 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import seasonalData from './data/seasonal.json'
+import impactData from './data/impact.json'
 import { strings } from './i18n/strings.js'
-import {
-  countryNames as deCountryNames,
-  monthNames as deMonthNames,
-  groupNames as deGroupNames,
-  produceNames as deProduceNames,
-} from './i18n/translations.js'
 import LanguageSelect from './components/LanguageSelect.vue'
 import CountryTabs from './components/CountryTabs.vue'
-import CountrySelect from './components/CountrySelect.vue'
 import MonthSwitcher from './components/MonthSwitcher.vue'
-import ProduceSection from './components/ProduceSection.vue'
-import EmptyState from './components/EmptyState.vue'
+import ImpactSection from './components/ImpactSection.vue'
 
-const { countries, monthNames, data } = seasonalData
+const { countries, data } = impactData
 
 function readHash() {
   const params = new URLSearchParams(window.location.hash.slice(1))
@@ -44,9 +36,9 @@ function initialLanguage(hashLang) {
 const today = new Date()
 const initial = readHash()
 
-const selectedCountry = ref(initial.country ?? 'GB')
-const selectedMonth = ref(initial.month ?? today.getMonth() + 1)
 const selectedLanguage = ref(initialLanguage(initial.lang))
+const selectedCountry = ref(initial.country ?? (selectedLanguage.value === 'de' ? 'DE' : 'GB'))
+const selectedMonth = ref(initial.month ?? today.getMonth() + 1)
 
 watch([selectedCountry, selectedMonth, selectedLanguage], ([country, month, lang]) => {
   const params = new URLSearchParams({ country, month: String(month), lang })
@@ -65,45 +57,17 @@ watch(
 )
 
 const localizedCountries = computed(() =>
-  countries.map((c) => ({
-    ...c,
-    label: selectedLanguage.value === 'de' ? deCountryNames[c.code] ?? c.label : c.label,
-  }))
-)
-const mainCountries = computed(() => localizedCountries.value.filter((c) => c.main))
-const otherCountries = computed(() => localizedCountries.value.filter((c) => !c.main))
-
-const localizedMonthNames = computed(() =>
-  selectedLanguage.value === 'de' ? deMonthNames : monthNames
+  countries.map((c) => ({ ...c, label: c.label[selectedLanguage.value] }))
 )
 
-function localizeGroups(groups) {
-  return groups.map((group) => ({
-    ...group,
-    label: selectedLanguage.value === 'de' ? deGroupNames[group.group] ?? group.group : group.group,
-    items: group.items.map((item) => ({
-      ...item,
-      name:
-        selectedLanguage.value === 'de'
-          ? deProduceNames[item.name.toLowerCase()] ?? item.name
-          : item.name,
-    })),
-  }))
-}
+const localizedMonthNames = computed(() => {
+  const fmt = new Intl.DateTimeFormat(selectedLanguage.value, { month: 'long', timeZone: 'UTC' })
+  return Array.from({ length: 12 }, (_, i) => fmt.format(new Date(Date.UTC(2024, i, 1))))
+})
 
 const monthLabel = computed(() => localizedMonthNames.value[selectedMonth.value - 1])
-const seasonal = computed(() => data[selectedCountry.value][String(selectedMonth.value)])
-const freshVeg = computed(() => localizeGroups(seasonal.value.fresh.vegetable))
-const freshFruit = computed(() => localizeGroups(seasonal.value.fresh.fruit))
-const storedVeg = computed(() => localizeGroups(seasonal.value.stored.vegetable))
-const storedFruit = computed(() => localizeGroups(seasonal.value.stored.fruit))
-const isEmpty = computed(
-  () =>
-    !freshVeg.value.length &&
-    !freshFruit.value.length &&
-    !storedVeg.value.length &&
-    !storedFruit.value.length
-)
+const impact = computed(() => data[selectedCountry.value][String(selectedMonth.value)])
+const isEmpty = computed(() => !impact.value.vegetable.length && !impact.value.fruit.length)
 
 function shiftMonth(delta) {
   let month = selectedMonth.value + delta
@@ -146,8 +110,7 @@ onBeforeUnmount(() => {
           :aria-label="t.countryNav"
         >
           <LanguageSelect v-model="selectedLanguage" />
-          <CountryTabs :countries="mainCountries" v-model="selectedCountry" />
-          <CountrySelect :countries="otherCountries" v-model="selectedCountry" :lang="selectedLanguage" />
+          <CountryTabs :countries="localizedCountries" v-model="selectedCountry" />
         </nav>
         <MonthSwitcher
           :label="monthLabel"
@@ -165,28 +128,19 @@ onBeforeUnmount(() => {
       >
         <Transition name="fade" mode="out-in">
           <div :key="`${selectedCountry}-${selectedMonth}`">
-            <EmptyState v-if="isEmpty" :label="t.emptyState" />
+            <p v-if="isEmpty" class="py-12 text-center text-sm text-stone-400 dark:text-stone-500">
+              {{ t.emptyState }}
+            </p>
             <template v-else>
-              <ProduceSection
-                :title="t.freshTitle"
-                :vegetable-groups="freshVeg"
-                :fruit-groups="freshFruit"
-                tone="fresh"
-                :lang="selectedLanguage"
-              />
-              <ProduceSection
-                :title="t.storedTitle"
-                :vegetable-groups="storedVeg"
-                :fruit-groups="storedFruit"
-                tone="stored"
-                :lang="selectedLanguage"
-              />
+              <p class="pb-3 text-xs text-stone-500 dark:text-stone-400">{{ t.legend }}</p>
+              <ImpactSection icon="🥕" :title="t.vegetables" :groups="impact.vegetable" :lang="selectedLanguage" />
+              <ImpactSection icon="🍎" :title="t.fruit" :groups="impact.fruit" :lang="selectedLanguage" />
             </template>
           </div>
         </Transition>
 
         <p class="pt-4 text-center text-xs text-stone-400 dark:text-stone-600 standalone:pt-2">
-          {{ t.dataSource }}
+          {{ t.disclaimer }}
         </p>
       </main>
     </div>

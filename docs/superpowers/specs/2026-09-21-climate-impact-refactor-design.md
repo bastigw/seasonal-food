@@ -119,3 +119,19 @@ Other countries, water/land metrics, swap suggestions. Design leaves room.
 First implementation step is a feasibility check of Comext and HMRC downloads
 (and Comext transport-mode coverage) for ~5 items before building the full
 pipeline.
+
+## Implementation notes (deviations from the design above)
+
+- `data/items.yaml` is `data/items.json` (stdlib only, no YAML dependency);
+  distances are computed from coordinates in `data/origins.json`.
+- Raw downloads are a committed snapshot in `data/raw/`; `pipeline/fetch.py`
+  refreshes it, `pipeline/build.py` is offline.
+- Added scenario `import_near_heated` (northern-European import outside the
+  field season, e.g. Dutch winter tomatoes).
+- Comext reports intra-EU trade by dispatch country, so re-export hubs are
+  redistributed (`hubReexport`) or replaced by the EU27 extra-EU origin mix
+  (`originRef`, banana/pineapple/avocado).
+- Comext transport-mode data is not available through the API; air freight
+  uses a per-item share (`airShareFar`).
+- Old `app/` and `scripts/` seasonal code removed; EUFIC JSON is read
+  directly by the pipeline.

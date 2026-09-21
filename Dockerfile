@@ -1,11 +1,12 @@
-# Stage 1: bake the seasonal produce data (all countries x all months) into a
-# single JSON file, so the shipped app needs no backend and no runtime API.
+# Stage 1: model the climate impact data (country x month) from the committed
+# raw trade/production snapshot into a single JSON file, so the shipped app
+# needs no backend and no runtime API. Offline: no network access needed.
 FROM python:3.12-slim AS data
 WORKDIR /build
-COPY app ./app
-COPY scripts ./scripts
+COPY pipeline ./pipeline
+COPY data ./data
 COPY eufic_seasonal_produce_matrix.json .
-RUN python3 scripts/generate_data.py
+RUN python3 -m unittest discover -s pipeline/tests -t . && python3 -m pipeline.build
 
 # Stage 2: build the static Vue app.
 FROM node:20-alpine AS build
@@ -13,7 +14,7 @@ WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 COPY frontend ./
-COPY --from=data /build/frontend/src/data/seasonal.json ./src/data/seasonal.json
+COPY --from=data /build/frontend/src/data/impact.json ./src/data/impact.json
 RUN npm run build
 
 # Stage 3: serve the built static files. No env vars, no volumes.

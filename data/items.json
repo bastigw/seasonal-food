@@ -1,0 +1,779 @@
+{
+ "meta": {
+  "note": "Footprints are rough estimates (order of magnitude from Poore & Nemecek 2018 category medians via Our World in Data, adjusted by item); airShareFar and glassMonths are modelling assumptions. Verify before relying on single numbers. hubReexport lists intra-EU dispatch hubs whose volume is redistributed over the other origins (Comext reports intra-EU trade by country of dispatch, so NL/BE hide the true origin of tropical fruit). originRef items take their origin mix from EU27-level Comext (extra-EU trade is recorded by origin) and scale it to the importing country's total volume."
+ },
+ "years": [
+  2023,
+  2024,
+  2025
+ ],
+ "portionKg": 0.5,
+ "tierThresholdsPerPortion": {
+  "lowMax": 0.35,
+  "mediumMax": 0.9
+ },
+ "transport": {
+  "roadKgPerTkm": 0.12,
+  "seaKgPerTkm": 0.02,
+  "airKgPerTkm": 0.6,
+  "roadDetour": 1.2,
+  "seaDetour": 1.4,
+  "airDetour": 1.1,
+  "nearKm": 3500,
+  "storageKgPerKg": 0.1
+ },
+ "countries": {
+  "DE": {
+   "lat": 52.52,
+   "lon": 13.4
+  },
+  "GB": {
+   "lat": 51.51,
+   "lon": -0.13
+  }
+ },
+ "groups": {
+  "vegetable": [
+   [
+    "fruiting",
+    "Fruiting veg",
+    "Fruchtgemüse"
+   ],
+   [
+    "roots",
+    "Roots & storage",
+    "Wurzel- & Lagergemüse"
+   ],
+   [
+    "leafy",
+    "Leafy & cabbages",
+    "Salat & Kohl"
+   ],
+   [
+    "other",
+    "Other",
+    "Sonstiges"
+   ]
+  ],
+  "fruit": [
+   [
+    "local",
+    "Local & berries",
+    "Heimisch & Beeren"
+   ],
+   [
+    "tropical",
+    "Citrus & tropical",
+    "Zitrus & Tropisch"
+   ],
+   [
+    "other",
+    "Other",
+    "Sonstiges"
+   ]
+  ]
+ },
+ "items": [
+  {
+   "id": "tomato",
+   "category": "vegetable",
+   "group": "fruiting",
+   "name": {
+    "en": "Tomato",
+    "de": "Tomate"
+   },
+   "tradeCode": "07020000",
+   "eufic": {
+    "DE": "tomato",
+    "GB": "tomato"
+   },
+   "cropCode": "V3110",
+   "glassCropCode": "V3100S",
+   "productionFieldKgPerKg": 1.0,
+   "productionHeatedKgPerKg": 3.5,
+   "airShareFar": 0,
+   "glassMonths": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "cucumber",
+   "category": "vegetable",
+   "group": "fruiting",
+   "name": {
+    "en": "Cucumber",
+    "de": "Gurke"
+   },
+   "tradeCode": "070700",
+   "eufic": {
+    "DE": "cucumber",
+    "GB": "cucumber"
+   },
+   "cropCode": "V3200_V3300",
+   "glassCropCode": "V3200S_V3300S",
+   "productionFieldKgPerKg": 0.5,
+   "productionHeatedKgPerKg": 2.0,
+   "airShareFar": 0,
+   "glassMonths": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "pepper",
+   "category": "vegetable",
+   "group": "fruiting",
+   "name": {
+    "en": "Bell pepper",
+    "de": "Paprika"
+   },
+   "tradeCode": "070960",
+   "eufic": {
+    "DE": "bell pepper",
+    "GB": "bell pepper"
+   },
+   "cropCode": "V3600",
+   "glassCropCode": "V3600S",
+   "productionFieldKgPerKg": 0.8,
+   "productionHeatedKgPerKg": 3.0,
+   "airShareFar": 0,
+   "glassMonths": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "courgette",
+   "category": "vegetable",
+   "group": "fruiting",
+   "name": {
+    "en": "Courgette",
+    "de": "Zucchini"
+   },
+   "tradeCode": "07099310",
+   "eufic": {
+    "DE": "courgette",
+    "GB": "courgette"
+   },
+   "cropCode": "V3420",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.5,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "aubergine",
+   "category": "vegetable",
+   "group": "fruiting",
+   "name": {
+    "en": "Aubergine",
+    "de": "Aubergine"
+   },
+   "tradeCode": "070930",
+   "eufic": {
+    "GB": "aubergine"
+   },
+   "cropCode": null,
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.7,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "potato",
+   "category": "vegetable",
+   "group": "roots",
+   "name": {
+    "en": "Potato",
+    "de": "Kartoffel"
+   },
+   "tradeCode": "070190",
+   "eufic": {
+    "DE": "potato",
+    "GB": "potato"
+   },
+   "cropCode": "R1000",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.46,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "carrot",
+   "category": "vegetable",
+   "group": "roots",
+   "name": {
+    "en": "Carrot",
+    "de": "Karotte"
+   },
+   "tradeCode": "070610",
+   "eufic": {
+    "DE": "carrot",
+    "GB": "carrot"
+   },
+   "cropCode": "V4100",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.4,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "onion",
+   "category": "vegetable",
+   "group": "roots",
+   "name": {
+    "en": "Onion",
+    "de": "Zwiebel"
+   },
+   "tradeCode": "070310",
+   "eufic": {
+    "DE": "onion",
+    "GB": "onion"
+   },
+   "cropCode": "V4200",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.5,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "lettuce",
+   "category": "vegetable",
+   "group": "leafy",
+   "name": {
+    "en": "Lettuce",
+    "de": "Salat"
+   },
+   "tradeCode": "0705",
+   "eufic": {
+    "DE": "lettuce",
+    "GB": "lettuce"
+   },
+   "cropCode": "V2300",
+   "glassCropCode": "V2300S",
+   "productionFieldKgPerKg": 0.6,
+   "productionHeatedKgPerKg": 1.8,
+   "airShareFar": 0,
+   "glassMonths": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "spinach",
+   "category": "vegetable",
+   "group": "leafy",
+   "name": {
+    "en": "Spinach",
+    "de": "Spinat"
+   },
+   "tradeCode": "070970",
+   "eufic": {
+    "DE": "spinach",
+    "GB": "spinach"
+   },
+   "cropCode": "V2500",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.6,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "cauliflower",
+   "category": "vegetable",
+   "group": "leafy",
+   "name": {
+    "en": "Cauliflower & broccoli",
+    "de": "Blumenkohl & Brokkoli"
+   },
+   "tradeCode": "070410",
+   "eufic": {
+    "DE": "cauliflower",
+    "GB": "cauliflower"
+   },
+   "cropCode": "V1100",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.5,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "cabbage",
+   "category": "vegetable",
+   "group": "leafy",
+   "name": {
+    "en": "Cabbage",
+    "de": "Kohl"
+   },
+   "tradeCode": "070490",
+   "eufic": {
+    "DE": "white cabbage",
+    "GB": "cabbage"
+   },
+   "cropCode": "V1300",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.4,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "mushroom",
+   "category": "vegetable",
+   "group": "other",
+   "name": {
+    "en": "Mushrooms",
+    "de": "Champignons"
+   },
+   "tradeCode": "070951",
+   "eufic": {
+    "DE": "mushroom",
+    "GB": "mushroom"
+   },
+   "cropCode": "U1000",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 1.0,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "green-bean",
+   "category": "vegetable",
+   "group": "other",
+   "name": {
+    "en": "Green beans",
+    "de": "Grüne Bohnen"
+   },
+   "tradeCode": "070820",
+   "eufic": {
+    "DE": "green bean",
+    "GB": "runner bean"
+   },
+   "cropCode": "V5200",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.8,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0.6,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "asparagus",
+   "category": "vegetable",
+   "group": "other",
+   "name": {
+    "en": "Asparagus",
+    "de": "Spargel"
+   },
+   "tradeCode": "070920",
+   "eufic": {
+    "DE": "asparagus",
+    "GB": "asparagus"
+   },
+   "cropCode": "V2600",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 1.0,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0.6,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "apple",
+   "category": "fruit",
+   "group": "local",
+   "name": {
+    "en": "Apple",
+    "de": "Apfel"
+   },
+   "tradeCode": "080810",
+   "eufic": {
+    "DE": "apple",
+    "GB": "apple"
+   },
+   "cropCode": "F1111",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.43,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "pear",
+   "category": "fruit",
+   "group": "local",
+   "name": {
+    "en": "Pear",
+    "de": "Birne"
+   },
+   "tradeCode": "080830",
+   "eufic": {
+    "DE": "pear",
+    "GB": "pear"
+   },
+   "cropCode": "F1121",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.43,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "strawberry",
+   "category": "fruit",
+   "group": "local",
+   "name": {
+    "en": "Strawberry",
+    "de": "Erdbeere"
+   },
+   "tradeCode": "081010",
+   "eufic": {
+    "DE": "strawberry",
+    "GB": "strawberry"
+   },
+   "cropCode": "S0000",
+   "glassCropCode": "S0000S",
+   "productionFieldKgPerKg": 1.5,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0.1,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "cherry",
+   "category": "fruit",
+   "group": "local",
+   "name": {
+    "en": "Cherry",
+    "de": "Kirsche"
+   },
+   "tradeCode": "080929",
+   "eufic": {
+    "DE": "cherry",
+    "GB": "cherry"
+   },
+   "cropCode": "F1240",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.6,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0.1,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "plum",
+   "category": "fruit",
+   "group": "local",
+   "name": {
+    "en": "Plum",
+    "de": "Pflaume"
+   },
+   "tradeCode": "080940",
+   "eufic": {
+    "DE": "plum",
+    "GB": "plum"
+   },
+   "cropCode": "F1250",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.43,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "blueberry",
+   "category": "fruit",
+   "group": "local",
+   "name": {
+    "en": "Blueberry",
+    "de": "Heidelbeere"
+   },
+   "tradeCode": "081040",
+   "eufic": {
+    "DE": "blueberry",
+    "GB": "blueberry"
+   },
+   "cropCode": "F3300",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 1.5,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0.2,
+   "glassMonths": [],
+   "hubReexport": [
+    "NL",
+    "BE"
+   ],
+   "originRef": false
+  },
+  {
+   "id": "banana",
+   "category": "fruit",
+   "group": "tropical",
+   "name": {
+    "en": "Banana",
+    "de": "Banane"
+   },
+   "tradeCode": "080390",
+   "eufic": {},
+   "cropCode": null,
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.86,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [
+    "NL",
+    "BE"
+   ],
+   "originRef": true
+  },
+  {
+   "id": "orange",
+   "category": "fruit",
+   "group": "tropical",
+   "name": {
+    "en": "Orange",
+    "de": "Orange"
+   },
+   "tradeCode": "080510",
+   "eufic": {},
+   "cropCode": null,
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.4,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [
+    "NL",
+    "BE"
+   ],
+   "originRef": false
+  },
+  {
+   "id": "lemon",
+   "category": "fruit",
+   "group": "tropical",
+   "name": {
+    "en": "Lemon",
+    "de": "Zitrone"
+   },
+   "tradeCode": "080550",
+   "eufic": {},
+   "cropCode": null,
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.4,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [
+    "NL",
+    "BE"
+   ],
+   "originRef": false
+  },
+  {
+   "id": "avocado",
+   "category": "fruit",
+   "group": "tropical",
+   "name": {
+    "en": "Avocado",
+    "de": "Avocado"
+   },
+   "tradeCode": "080440",
+   "eufic": {},
+   "cropCode": null,
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 1.0,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [
+    "NL",
+    "BE"
+   ],
+   "originRef": true
+  },
+  {
+   "id": "pineapple",
+   "category": "fruit",
+   "group": "tropical",
+   "name": {
+    "en": "Pineapple",
+    "de": "Ananas"
+   },
+   "tradeCode": "080430",
+   "eufic": {},
+   "cropCode": null,
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.7,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0.3,
+   "glassMonths": [],
+   "hubReexport": [
+    "NL",
+    "BE"
+   ],
+   "originRef": true
+  },
+  {
+   "id": "grape",
+   "category": "fruit",
+   "group": "other",
+   "name": {
+    "en": "Grapes",
+    "de": "Trauben"
+   },
+   "tradeCode": "080610",
+   "eufic": {
+    "DE": "grape"
+   },
+   "cropCode": "W1200",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 1.5,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [
+    "NL",
+    "BE"
+   ],
+   "originRef": false
+  },
+  {
+   "id": "kiwi",
+   "category": "fruit",
+   "group": "other",
+   "name": {
+    "en": "Kiwi",
+    "de": "Kiwi"
+   },
+   "tradeCode": "081050",
+   "eufic": {},
+   "cropCode": null,
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.6,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [
+    "NL",
+    "BE"
+   ],
+   "originRef": false
+  },
+  {
+   "id": "peach",
+   "category": "fruit",
+   "group": "other",
+   "name": {
+    "en": "Peach & nectarine",
+    "de": "Pfirsich & Nektarine"
+   },
+   "tradeCode": "080930",
+   "eufic": {},
+   "cropCode": "F1210_1220",
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.6,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  },
+  {
+   "id": "watermelon",
+   "category": "fruit",
+   "group": "other",
+   "name": {
+    "en": "Watermelon",
+    "de": "Wassermelone"
+   },
+   "tradeCode": "080711",
+   "eufic": {
+    "DE": "watermelon",
+    "GB": "watermelon"
+   },
+   "cropCode": null,
+   "glassCropCode": null,
+   "productionFieldKgPerKg": 0.4,
+   "productionHeatedKgPerKg": null,
+   "airShareFar": 0,
+   "glassMonths": [],
+   "hubReexport": [],
+   "originRef": false
+  }
+ ]
+}

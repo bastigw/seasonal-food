@@ -1,0 +1,232 @@
+{
+"ES": {
+"lat": 40.4,
+"lon": -3.7,
+"mode": "road"
+},
+"NL": {
+"lat": 52.4,
+"lon": 4.9,
+"mode": "road"
+},
+"IT": {
+"lat": 41.9,
+"lon": 12.5,
+"mode": "road"
+},
+"BE": {
+"lat": 50.8,
+"lon": 4.4,
+"mode": "road"
+},
+"FR": {
+"lat": 46.6,
+"lon": 2.3,
+"mode": "road"
+},
+"PL": {
+"lat": 52.0,
+"lon": 19.1,
+"mode": "road"
+},
+"GR": {
+"lat": 39.1,
+"lon": 22.0,
+"mode": "road"
+},
+"AT": {
+"lat": 47.5,
+"lon": 14.5,
+"mode": "road"
+},
+"IE": {
+"lat": 53.4,
+"lon": -8.2,
+"mode": "road"
+},
+"DE": {
+"lat": 51.2,
+"lon": 10.4,
+"mode": "road"
+},
+"PT": {
+"lat": 39.4,
+"lon": -8.2,
+"mode": "road"
+},
+"HU": {
+"lat": 47.2,
+"lon": 19.5,
+"mode": "road"
+},
+"DK": {
+"lat": 56.3,
+"lon": 9.5,
+"mode": "road"
+},
+"SI": {
+"lat": 46.1,
+"lon": 14.8,
+"mode": "road"
+},
+"CY": {
+"lat": 35.1,
+"lon": 33.4,
+"mode": "sea"
+},
+"CZ": {
+"lat": 49.8,
+"lon": 15.5,
+"mode": "road"
+},
+"RO": {
+"lat": 45.9,
+"lon": 25.0,
+"mode": "road"
+},
+"BG": {
+"lat": 42.7,
+"lon": 25.5,
+"mode": "road"
+},
+"XS": {
+"lat": 44.0,
+"lon": 21.0,
+"mode": "road"
+},
+"MA": {
+"lat": 31.8,
+"lon": -7.1,
+"mode": "road"
+},
+"TR": {
+"lat": 39.0,
+"lon": 35.2,
+"mode": "road"
+},
+"CO": {
+"lat": 4.6,
+"lon": -74.1,
+"mode": "sea"
+},
+"CR": {
+"lat": 9.9,
+"lon": -84.1,
+"mode": "sea"
+},
+"ZA": {
+"lat": -29.0,
+"lon": 24.0,
+"mode": "sea"
+},
+"EC": {
+"lat": -1.8,
+"lon": -78.2,
+"mode": "sea"
+},
+"EG": {
+"lat": 27.0,
+"lon": 30.0,
+"mode": "sea"
+},
+"PE": {
+"lat": -9.2,
+"lon": -75.0,
+"mode": "sea"
+},
+"BR": {
+"lat": -15.0,
+"lon": -48.0,
+"mode": "sea"
+},
+"DO": {
+"lat": 18.7,
+"lon": -70.2,
+"mode": "sea"
+},
+"CL": {
+"lat": -33.5,
+"lon": -70.7,
+"mode": "sea"
+},
+"IL": {
+"lat": 31.0,
+"lon": 34.9,
+"mode": "sea"
+},
+"GT": {
+"lat": 15.5,
+"lon": -90.2,
+"mode": "sea"
+},
+"NI": {
+"lat": 12.9,
+"lon": -85.2,
+"mode": "sea"
+},
+"BZ": {
+"lat": 17.2,
+"lon": -88.5,
+"mode": "sea"
+},
+"NZ": {
+"lat": -40.9,
+"lon": 174.9,
+"mode": "sea"
+},
+"CM": {
+"lat": 4.5,
+"lon": 10.0,
+"mode": "sea"
+},
+"CI": {
+"lat": 5.3,
+"lon": -4.0,
+"mode": "sea"
+},
+"PA": {
+"lat": 8.5,
+"lon": -80.8,
+"mode": "sea"
+},
+"IN": {
+"lat": 21.0,
+"lon": 78.0,
+"mode": "sea"
+},
+"KE": {
+"lat": -0.02,
+"lon": 37.9,
+"mode": "sea"
+},
+"GH": {
+"lat": 7.9,
+"lon": -1.0,
+"mode": "sea"
+},
+"CN": {
+"lat": 35.9,
+"lon": 104.2,
+"mode": "sea"
+},
+"AR": {
+"lat": -38.4,
+"lon": -63.6,
+"mode": "sea"
+},
+"SN": {
+"lat": 14.5,
+"lon": -14.5,
+"mode": "sea"
+},
+"US": {
+"lat": 37.1,
+"lon": -95.7,
+"mode": "sea"
+},
+"MX": {
+"lat": 23.6,
+"lon": -102.6,
+"mode": "sea"
+}
+}
