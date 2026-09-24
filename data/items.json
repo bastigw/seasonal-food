@@ -683,6 +683,10 @@
    "productionFieldKgPerKg": 1.0,
    "productionHeatedKgPerKg": null,
    "hestiaProduct": "Avocado, fruit",
+   "hestiaProxy": {
+    "CL": "PE",
+    "CO": "PE"
+   },
    "airShareFar": 0,
    "glassMonths": [],
    "hubReexport": [

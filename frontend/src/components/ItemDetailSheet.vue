@@ -153,6 +153,10 @@ const originRows = computed(() => {
   return (activeItem.value.originBreakdown ?? []).map((o) => ({
     ...o,
     name: display?.of(o.code) ?? o.code,
+    proxyNote:
+      o.productionSource === 'proxy' && o.proxyFrom
+        ? t.value.productionProxy.replace('{country}', display?.of(o.proxyFrom) ?? o.proxyFrom)
+        : null,
   }))
 })
 // Bars scaled relative to the largest of the shown origins, so small
@@ -185,14 +189,18 @@ function handleKeydown(event) {
 onMounted(() => window.addEventListener('keydown', handleKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 
-// Swipe-down-to-close for the mobile bottom sheet. Scoped to the header/handle
-// area (not the scrollable body) so dragging never fights with scrolling the
-// chart or lists below it.
-const CLOSE_DISTANCE = 100
-const CLOSE_VELOCITY = 0.5 // px/ms
+// Swipe-down-to-close for the mobile bottom sheet. The gesture works from
+// anywhere on the sheet while its content is scrolled to the top, so a plain
+// downward swipe dismisses it; once the content is scrolled, swipes scroll as
+// usual and only the handle/header still starts a drag.
+const CLOSE_DISTANCE = 60
+const CLOSE_VELOCITY = 0.3 // px/ms
+const DRAG_SLOP = 6 // px of downward travel before a touch becomes a drag
 
+const sheetEl = ref(null)
 const dragging = ref(false)
 const dragOffset = ref(0)
+let dragArmed = false
 let dragStartY = 0
 let dragStartTime = 0
 
@@ -208,23 +216,31 @@ const backdropStyle = computed(() => {
 })
 
 function onDragStart(event) {
-  dragging.value = true
+  dragging.value = false
   dragOffset.value = 0
+  const inHeader = !!event.target.closest?.('[data-drag-handle]')
+  dragArmed = inHeader || (sheetEl.value?.scrollTop ?? 0) <= 0
   dragStartY = event.touches[0].clientY
   dragStartTime = event.timeStamp
 }
 
 function onDragMove(event) {
-  if (!dragging.value) return
+  if (!dragArmed) return
   const delta = event.touches[0].clientY - dragStartY
-  dragOffset.value = Math.max(0, delta)
+  if (!dragging.value) {
+    if (delta <= DRAG_SLOP) return
+    dragging.value = true
+  }
+  dragOffset.value = Math.max(0, delta - DRAG_SLOP)
+  if (event.cancelable) event.preventDefault()
 }
 
 function onDragEnd(event) {
-  if (!dragging.value) return
+  const wasDragging = dragging.value
   const elapsed = event.timeStamp - dragStartTime || 1
   const velocity = dragOffset.value / elapsed
-  const shouldClose = dragOffset.value > CLOSE_DISTANCE || velocity > CLOSE_VELOCITY
+  const shouldClose = wasDragging && (dragOffset.value > CLOSE_DISTANCE || velocity > CLOSE_VELOCITY)
+  dragArmed = false
   dragging.value = false
   dragOffset.value = 0
   if (shouldClose) emit('close')
@@ -238,27 +254,20 @@ function onDragEnd(event) {
     @click.self="emit('close')"
   >
     <div
-      class="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-stone-50 p-5 pb-[calc(env(safe-area-inset-bottom)_+_1.25rem)] shadow-xl transition-transform dark:bg-stone-900 sm:max-h-[80vh] sm:rounded-2xl sm:pb-5"
+      class="max-h-[85vh] w-full max-w-md overflow-y-auto overscroll-y-contain rounded-t-2xl bg-stone-50 p-5 pb-[calc(env(safe-area-inset-bottom)_+_1.25rem)] shadow-xl transition-transform dark:bg-stone-900 sm:max-h-[80vh] sm:rounded-2xl sm:pb-5"
+      ref="sheetEl"
       role="dialog"
       aria-modal="true"
       :style="sheetStyle"
+      @touchstart.passive="onDragStart"
+      @touchmove="onDragMove"
+      @touchend="onDragEnd"
+      @touchcancel="onDragEnd"
     >
-      <div
-        class="-mx-5 -mt-5 mb-2 flex justify-center pb-1 pt-2 sm:hidden"
-        @touchstart="onDragStart"
-        @touchmove="onDragMove"
-        @touchend="onDragEnd"
-        @touchcancel="onDragEnd"
-      >
+      <div class="-mx-5 -mt-5 mb-2 flex justify-center pb-1 pt-2 sm:hidden" data-drag-handle>
         <span class="h-1.5 w-10 rounded-full bg-stone-300 dark:bg-stone-700" aria-hidden="true" />
       </div>
-      <div
-        class="mb-3 flex items-start justify-between gap-3"
-        @touchstart="onDragStart"
-        @touchmove="onDragMove"
-        @touchend="onDragEnd"
-        @touchcancel="onDragEnd"
-      >
+      <div class="mb-3 flex items-start justify-between gap-3" data-drag-handle>
         <div>
           <h2 class="text-base font-semibold">{{ item.name[lang] }}</h2>
           <p class="text-xs text-stone-500 dark:text-stone-400">{{ activeMonthSummary }}</p>
@@ -408,8 +417,12 @@ function onDragEnd(event) {
             <span class="block h-1.5 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
               <span
                 class="block h-full rounded-full bg-stone-400 dark:bg-stone-500"
+                :class="o.proxyNote ? 'opacity-60' : ''"
                 :style="{ width: `${Math.max(4, (o.kgCo2ePerPortion / originScaleMax) * 100)}%` }"
               />
+            </span>
+            <span v-if="o.proxyNote" class="mt-0.5 block text-[10px] italic text-stone-400 dark:text-stone-500">
+              {{ o.proxyNote }}
             </span>
           </li>
         </ul>

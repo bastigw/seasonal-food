@@ -5,7 +5,7 @@ Offline and deterministic: python3 -m pipeline.build
 import json
 from pathlib import Path
 
-from .footprint import production_kg_per_kg, scenario_kg_per_kg, tier
+from .footprint import production_kg_per_kg, production_with_source, scenario_kg_per_kg, tier
 from .scenarios import (
     FAR, SHORT, confidence, domestic_volumes, import_scenarios, monthly_import_kg,
     apply_origin_ref, probabilities, recent_production_t, redistribute_hubs,
@@ -27,7 +27,8 @@ SOURCES = {
     "seasonality": "EUFIC seasonal produce matrix",
     "footprint": "Poore & Nemecek 2018 (via Our World in Data) category medians, adjusted; DEFRA/GLEC transport factors (approximate)",
     "footprintOrigin": "HESTIA aggregated data (hestia.earth), release 2026-03-10, where a real "
-                        "per-origin-country value exists; Poore & Nemecek category median otherwise",
+                        "per-origin-country value exists, else the value of a comparable proxy country "
+                        "(marked as such), else Poore & Nemecek category median",
 }
 
 
@@ -37,6 +38,7 @@ def _flag(code: str) -> str:
 
 
 MAX_ORIGIN_ROWS = 3
+SOURCE_RANK = {"country": 0, "proxy": 1, "estimate": 2}  # weakest tier wins when an origin mixes scenarios
 
 
 def build_origin_breakdown(item: dict, country_code: str, dom_month: dict, imp_origin_parts: list,
@@ -46,13 +48,15 @@ def build_origin_breakdown(item: dict, country_code: str, dom_month: dict, imp_o
     each with their own kg CO2e/portion - not the single blended "top
     scenario" value, so e.g. Colombian vs. Costa Rican bananas show up as
     their own real numbers instead of one averaged-away figure."""
-    rows: dict = {}  # origin -> {"kg": float, "co2Weighted": float}
+    rows: dict = {}  # origin -> {"kg": float, "co2Weighted": float, "source": str, "proxy": str | None}
 
     def add(origin: str, scenario: str, kg: float, transport_per_kg: float, storage: float = 0.0):
         if kg <= 0:
             return
-        production = production_kg_per_kg(item, scenario, origin, hestia)
-        row = rows.setdefault(origin, {"kg": 0.0, "co2Weighted": 0.0})
+        production, source, proxy = production_with_source(item, scenario, origin, hestia)
+        row = rows.setdefault(origin, {"kg": 0.0, "co2Weighted": 0.0, "source": source, "proxy": proxy})
+        if SOURCE_RANK[source] > SOURCE_RANK[row["source"]]:
+            row["source"], row["proxy"] = source, proxy
         row["kg"] += kg
         row["co2Weighted"] += kg * (production + transport_per_kg + storage)
 
@@ -68,14 +72,21 @@ def build_origin_breakdown(item: dict, country_code: str, dom_month: dict, imp_o
     if total_kg <= 0 or not rows:
         return []
     ranked = sorted(rows.items(), key=lambda kv: -kv[1]["kg"])[:MAX_ORIGIN_ROWS]
-    return [
-        {
+    out = []
+    for origin, r in ranked:
+        row = {
             "code": origin,
             "share": round(r["kg"] / total_kg, 3),
             "kgCo2ePerPortion": round((r["co2Weighted"] / r["kg"]) * portion, 3),
         }
-        for origin, r in ranked
-    ]
+        # Only items HESTIA covers say where the production number came from;
+        # for the rest every row would read "estimate", which is just noise.
+        if item["hestiaProduct"]:
+            row["productionSource"] = r["source"]
+            if r["proxy"]:
+                row["proxyFrom"] = r["proxy"]
+        out.append(row)
+    return out
 
 
 def build_country(code: str, cfg: dict, trade: dict, production: dict, origins: dict, eufic: dict,

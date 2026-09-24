@@ -34,7 +34,10 @@ likely one:
   DEFRA/GLEC-style). Production uses a real per-origin-country value from
   [HESTIA](https://www.hestia.earth) aggregated data when the item's
   dominant import origin that month has one (unheated scenarios only -
-  HESTIA doesn't distinguish heated glasshouse production); otherwise it
+  HESTIA doesn't distinguish heated glasshouse production). If the origin
+  has none, an item's `hestiaProxy` may borrow a comparable country's value
+  (avocado: Chile and Colombia use Peru, since HESTIA's own Chile aggregate
+  is too poor to publish); the app marks such rows as "proxy". Otherwise it
   falls back to a flat per-item value (approximate, after Poore & Nemecek
   2018 via Our World in Data). Air-freight shares, glasshouse months and
   the flat production values are assumptions in `data/items.json` and

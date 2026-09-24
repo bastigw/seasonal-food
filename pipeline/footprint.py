@@ -16,24 +16,39 @@ def transport_kg_per_kg(distance_km: float, mode: str, cfg: dict) -> float:
     return distance_km * factor / 1000.0
 
 
-def production_kg_per_kg(item: dict, scenario: str, origin: str | None = None, hestia: dict | None = None) -> float:
-    """Production-only footprint (no transport/storage) for one scenario.
+def production_with_source(item: dict, scenario: str, origin: str | None = None,
+                           hestia: dict | None = None) -> tuple[float, str, str | None]:
+    """Production-only footprint (no transport/storage) for one scenario, plus
+    where the number came from: (kg CO2e/kg, source, proxy origin).
 
     Heated scenarios always use the item's flat heated constant: HESTIA's
     per-country aggregates don't distinguish heated glasshouse production
     from field/tunnel growing, so they can't isolate the heating effect the
-    heated constant exists to capture. For unheated scenarios, prefer a real
-    HESTIA per-origin-country value (`hestia[item["id"]][origin]`) over the
-    flat global `productionFieldKgPerKg` constant when one is available.
+    heated constant exists to capture. For unheated scenarios the tiers are:
+
+    1. "country"  - a real HESTIA value for the origin country
+    2. "proxy"    - the item's `hestiaProxy` maps the origin to a comparable
+                    country that has a HESTIA value (e.g. Chile -> Peru for
+                    avocado, where HESTIA's own Chile aggregate is too poor
+                    to publish)
+    3. "estimate" - the flat global `productionFieldKgPerKg` constant
     """
     heated = scenario in ("domestic_heated", "import_near_heated")
     if heated and item["productionHeatedKgPerKg"] is not None:
-        return item["productionHeatedKgPerKg"]
-    if origin and hestia:
-        override = hestia.get(item["id"], {}).get(origin)
+        return item["productionHeatedKgPerKg"], "estimate", None
+    by_country = (hestia or {}).get(item["id"], {})
+    if origin:
+        override = by_country.get(origin)
         if override:
-            return override["gwp100KgPerKg"]
-    return item["productionFieldKgPerKg"]
+            return override["gwp100KgPerKg"], "country", None
+        proxy = (item.get("hestiaProxy") or {}).get(origin)
+        if proxy and by_country.get(proxy):
+            return by_country[proxy]["gwp100KgPerKg"], "proxy", proxy
+    return item["productionFieldKgPerKg"], "estimate", None
+
+
+def production_kg_per_kg(item: dict, scenario: str, origin: str | None = None, hestia: dict | None = None) -> float:
+    return production_with_source(item, scenario, origin, hestia)[0]
 
 
 def scenario_kg_per_kg(item: dict, scenario: str, transport: float, cfg: dict,

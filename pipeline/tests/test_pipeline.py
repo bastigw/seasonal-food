@@ -3,7 +3,9 @@ import unittest
 from pathlib import Path
 
 from pipeline import build
-from pipeline.footprint import haversine_km, scenario_kg_per_kg, tier, transport_kg_per_kg
+from pipeline.footprint import (
+    haversine_km, production_with_source, scenario_kg_per_kg, tier, transport_kg_per_kg,
+)
 from pipeline.scenarios import (
     apply_origin_ref, confidence, domestic_volumes, import_scenarios, probabilities,
     recent_production_t, redistribute_hubs,
@@ -119,6 +121,30 @@ class GoldenTests(unittest.TestCase):
         # flat global productionFieldKgPerKg constant.
         flat = ITEMS["banana"]["productionFieldKgPerKg"] * CFG["portionKg"]
         self.assertNotAlmostEqual(self.item("GB", 1, "banana")["productionKgPerPortion"], flat, places=2)
+
+    def test_production_source_tiers(self):
+        item = {**ITEMS["avocado"], "hestiaProxy": {"CL": "PE"}}
+        hestia = {"avocado": {"PE": {"gwp100KgPerKg": 4.05}}}
+        self.assertEqual(production_with_source(item, "import_far", "PE", hestia), (4.05, "country", None))
+        self.assertEqual(production_with_source(item, "import_far", "CL", hestia), (4.05, "proxy", "PE"))
+        flat = item["productionFieldKgPerKg"]
+        # No proxy mapping for CO, and a proxy whose own value is missing, both fall through.
+        self.assertEqual(production_with_source(item, "import_far", "CO", hestia), (flat, "estimate", None))
+        self.assertEqual(production_with_source(item, "import_far", "CL", {}), (flat, "estimate", None))
+
+    def test_avocado_chile_and_colombia_use_peru_proxy_in_breakdown(self):
+        seen = {}
+        for cc in ("DE", "GB"):
+            for m in range(1, 13):
+                for o in (self.item(cc, m, "avocado") or {}).get("originBreakdown", []):
+                    seen.setdefault(o["code"], o)
+        self.assertTrue(seen, "avocado should have an origin breakdown")
+        for code in ("CL", "CO"):
+            if code in seen:
+                self.assertEqual(seen[code]["productionSource"], "proxy", code)
+                self.assertEqual(seen[code]["proxyFrom"], "PE")
+        if "PE" in seen:
+            self.assertEqual(seen["PE"]["productionSource"], "country")
 
     def test_groups_sorted_best_to_worst(self):
         for country in self.out["data"].values():
