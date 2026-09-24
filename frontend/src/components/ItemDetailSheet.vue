@@ -184,19 +184,81 @@ function handleKeydown(event) {
 
 onMounted(() => window.addEventListener('keydown', handleKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
+
+// Swipe-down-to-close for the mobile bottom sheet. Scoped to the header/handle
+// area (not the scrollable body) so dragging never fights with scrolling the
+// chart or lists below it.
+const CLOSE_DISTANCE = 100
+const CLOSE_VELOCITY = 0.5 // px/ms
+
+const dragging = ref(false)
+const dragOffset = ref(0)
+let dragStartY = 0
+let dragStartTime = 0
+
+const sheetStyle = computed(() => {
+  if (!dragging.value || dragOffset.value <= 0) return {}
+  return { transform: `translateY(${dragOffset.value}px)`, transition: 'none' }
+})
+
+const backdropStyle = computed(() => {
+  if (!dragging.value || dragOffset.value <= 0) return {}
+  const fade = Math.max(0, 1 - dragOffset.value / 400)
+  return { opacity: fade }
+})
+
+function onDragStart(event) {
+  dragging.value = true
+  dragOffset.value = 0
+  dragStartY = event.touches[0].clientY
+  dragStartTime = event.timeStamp
+}
+
+function onDragMove(event) {
+  if (!dragging.value) return
+  const delta = event.touches[0].clientY - dragStartY
+  dragOffset.value = Math.max(0, delta)
+}
+
+function onDragEnd(event) {
+  if (!dragging.value) return
+  const elapsed = event.timeStamp - dragStartTime || 1
+  const velocity = dragOffset.value / elapsed
+  const shouldClose = dragOffset.value > CLOSE_DISTANCE || velocity > CLOSE_VELOCITY
+  dragging.value = false
+  dragOffset.value = 0
+  if (shouldClose) emit('close')
+}
 </script>
 
 <template>
   <div
-    class="fixed inset-0 z-30 flex items-end justify-center bg-stone-950/40 backdrop-blur-sm sm:items-center sm:p-4"
+    class="fixed inset-0 z-30 flex items-end justify-center bg-stone-950/40 backdrop-blur-sm transition-opacity sm:items-center sm:p-4"
+    :style="backdropStyle"
     @click.self="emit('close')"
   >
     <div
-      class="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-stone-50 p-5 pb-[calc(env(safe-area-inset-bottom)_+_1.25rem)] shadow-xl dark:bg-stone-900 sm:max-h-[80vh] sm:rounded-2xl sm:pb-5"
+      class="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-stone-50 p-5 pb-[calc(env(safe-area-inset-bottom)_+_1.25rem)] shadow-xl transition-transform dark:bg-stone-900 sm:max-h-[80vh] sm:rounded-2xl sm:pb-5"
       role="dialog"
       aria-modal="true"
+      :style="sheetStyle"
     >
-      <div class="mb-3 flex items-start justify-between gap-3">
+      <div
+        class="-mx-5 -mt-5 mb-2 flex justify-center pb-1 pt-2 sm:hidden"
+        @touchstart="onDragStart"
+        @touchmove="onDragMove"
+        @touchend="onDragEnd"
+        @touchcancel="onDragEnd"
+      >
+        <span class="h-1.5 w-10 rounded-full bg-stone-300 dark:bg-stone-700" aria-hidden="true" />
+      </div>
+      <div
+        class="mb-3 flex items-start justify-between gap-3"
+        @touchstart="onDragStart"
+        @touchmove="onDragMove"
+        @touchend="onDragEnd"
+        @touchcancel="onDragEnd"
+      >
         <div>
           <h2 class="text-base font-semibold">{{ item.name[lang] }}</h2>
           <p class="text-xs text-stone-500 dark:text-stone-400">{{ activeMonthSummary }}</p>
@@ -296,7 +358,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
             {{ label }}
           </text>
         </svg>
-        <ul class="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+        <ul class="mt-1 flex flex-wrap justify-center gap-x-3 gap-y-1">
           <li v-for="s in originSeries" :key="s.code" class="flex items-center gap-1 text-[11px]">
             <span class="h-2 w-2 shrink-0 rounded-full" :style="{ backgroundColor: s.color }" aria-hidden="true" />
             <span class="text-stone-500 dark:text-stone-400">{{ s.name }}</span>
