@@ -6,6 +6,8 @@ import LanguageSelect from './components/LanguageSelect.vue'
 import CountryTabs from './components/CountryTabs.vue'
 import MonthSwitcher from './components/MonthSwitcher.vue'
 import ImpactSection from './components/ImpactSection.vue'
+import ItemDetailSheet from './components/ItemDetailSheet.vue'
+import { buildItemSeries } from './lib/impactSeries.js'
 
 const { countries, data } = impactData
 
@@ -68,6 +70,31 @@ const localizedMonthNames = computed(() => {
 const monthLabel = computed(() => localizedMonthNames.value[selectedMonth.value - 1])
 const impact = computed(() => data[selectedCountry.value][String(selectedMonth.value)])
 const isEmpty = computed(() => !impact.value.vegetable.length && !impact.value.fruit.length)
+
+const selectedItemId = ref(null)
+const selectedItem = computed(() => {
+  if (!selectedItemId.value) return null
+  const groups = [...impact.value.vegetable, ...impact.value.fruit]
+  for (const group of groups) {
+    const match = group.items.find((item) => item.id === selectedItemId.value)
+    if (match) return match
+  }
+  return null
+})
+const selectedItemSeries = computed(() =>
+  selectedItemId.value ? buildItemSeries(data, selectedCountry.value, selectedItemId.value).series : []
+)
+
+// If country/month changes to where the selected item no longer appears
+// (out of season, or not grown in that country), close the sheet instead
+// of showing stale data.
+watch(selectedItem, (item) => {
+  if (!item) selectedItemId.value = null
+})
+
+function openItemDetail(item) {
+  selectedItemId.value = item.id
+}
 
 function shiftMonth(delta) {
   let month = selectedMonth.value + delta
@@ -133,8 +160,20 @@ onBeforeUnmount(() => {
             </p>
             <template v-else>
               <p class="pb-3 text-xs text-stone-500 dark:text-stone-400">{{ t.legend }}</p>
-              <ImpactSection icon="🥕" :title="t.vegetables" :groups="impact.vegetable" :lang="selectedLanguage" />
-              <ImpactSection icon="🍎" :title="t.fruit" :groups="impact.fruit" :lang="selectedLanguage" />
+              <ImpactSection
+                icon="🥕"
+                :title="t.vegetables"
+                :groups="impact.vegetable"
+                :lang="selectedLanguage"
+                @select="openItemDetail"
+              />
+              <ImpactSection
+                icon="🍎"
+                :title="t.fruit"
+                :groups="impact.fruit"
+                :lang="selectedLanguage"
+                @select="openItemDetail"
+              />
             </template>
           </div>
         </Transition>
@@ -143,6 +182,15 @@ onBeforeUnmount(() => {
           {{ t.disclaimer }}
         </p>
       </main>
+
+      <ItemDetailSheet
+        v-if="selectedItem"
+        :item="selectedItem"
+        :series="selectedItemSeries"
+        :current-month="selectedMonth"
+        :lang="selectedLanguage"
+        @close="selectedItemId = null"
+      />
     </div>
   </div>
 </template>

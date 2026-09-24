@@ -53,13 +53,13 @@ class ScenarioTests(unittest.TestCase):
     def test_northern_import_is_heated_off_season_only(self):
         item = ITEMS["tomato"]
         args = dict(origins=ORIGINS, importer=BERLIN, transport_cfg=CFG["transport"])
-        winter, _ = import_scenarios(item, 2, {"NL": 100.0, "ES": 100.0}, in_field_season=False, **args)
-        summer, _ = import_scenarios(item, 8, {"NL": 100.0, "ES": 100.0}, in_field_season=True, **args)
+        winter, _, _ = import_scenarios(item, 2, {"NL": 100.0, "ES": 100.0}, in_field_season=False, **args)
+        summer, _, _ = import_scenarios(item, 8, {"NL": 100.0, "ES": 100.0}, in_field_season=True, **args)
         self.assertEqual(winter["import_near_heated"], 100.0)
         self.assertNotIn("import_near_heated", summer)
 
     def test_far_import_splits_air_share(self):
-        vol, tr = import_scenarios(ITEMS["green-bean"], 2, {"KE": 100.0}, ORIGINS, BERLIN, False, CFG["transport"])
+        vol, tr, _ = import_scenarios(ITEMS["green-bean"], 2, {"KE": 100.0}, ORIGINS, BERLIN, False, CFG["transport"])
         self.assertAlmostEqual(vol["import_far_air"], 60.0)
         self.assertGreater(tr["import_far_air"], tr["import_far"])
 
@@ -102,6 +102,23 @@ class GoldenTests(unittest.TestCase):
     def test_potato_beats_air_freighted_beans(self):
         self.assertLess(self.item("GB", 2, "potato")["kgCo2ePerPortion"],
                         self.item("GB", 2, "green-bean")["kgCo2ePerPortion"])
+
+    def test_origin_breakdown_has_distinct_per_country_values(self):
+        # Different supplying countries should show their own footprint,
+        # not one blended-away number repeated for each row.
+        rows = self.item("GB", 1, "banana")["originBreakdown"]
+        self.assertGreater(len(rows), 1)
+        values = {r["kgCo2ePerPortion"] for r in rows}
+        self.assertGreater(len(values), 1)
+        shares = [r["share"] for r in rows]
+        self.assertEqual(shares, sorted(shares, reverse=True))
+
+    def test_banana_production_uses_hestia_origin_value_not_flat_constant(self):
+        # GB imports bananas mostly from Colombia in January; HESTIA has a
+        # real per-country value for that, which should override the item's
+        # flat global productionFieldKgPerKg constant.
+        flat = ITEMS["banana"]["productionFieldKgPerKg"] * CFG["portionKg"]
+        self.assertNotAlmostEqual(self.item("GB", 1, "banana")["productionKgPerPortion"], flat, places=2)
 
     def test_groups_sorted_best_to_worst(self):
         for country in self.out["data"].values():

@@ -16,15 +16,29 @@ def transport_kg_per_kg(distance_km: float, mode: str, cfg: dict) -> float:
     return distance_km * factor / 1000.0
 
 
-def production_kg_per_kg(item: dict, scenario: str) -> float:
+def production_kg_per_kg(item: dict, scenario: str, origin: str | None = None, hestia: dict | None = None) -> float:
+    """Production-only footprint (no transport/storage) for one scenario.
+
+    Heated scenarios always use the item's flat heated constant: HESTIA's
+    per-country aggregates don't distinguish heated glasshouse production
+    from field/tunnel growing, so they can't isolate the heating effect the
+    heated constant exists to capture. For unheated scenarios, prefer a real
+    HESTIA per-origin-country value (`hestia[item["id"]][origin]`) over the
+    flat global `productionFieldKgPerKg` constant when one is available.
+    """
     heated = scenario in ("domestic_heated", "import_near_heated")
     if heated and item["productionHeatedKgPerKg"] is not None:
         return item["productionHeatedKgPerKg"]
+    if origin and hestia:
+        override = hestia.get(item["id"], {}).get(origin)
+        if override:
+            return override["gwp100KgPerKg"]
     return item["productionFieldKgPerKg"]
 
 
-def scenario_kg_per_kg(item: dict, scenario: str, transport: float, cfg: dict) -> float:
-    total = production_kg_per_kg(item, scenario) + transport
+def scenario_kg_per_kg(item: dict, scenario: str, transport: float, cfg: dict,
+                       origin: str | None = None, hestia: dict | None = None) -> float:
+    total = production_kg_per_kg(item, scenario, origin, hestia) + transport
     if scenario == "domestic_stored":
         total += cfg["storageKgPerKg"]
     return total

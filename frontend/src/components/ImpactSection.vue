@@ -7,6 +7,8 @@ defineProps({
   groups: { type: Array, required: true },
   lang: { type: String, default: 'en' },
 })
+
+const emit = defineEmits(['select'])
 </script>
 
 <template>
@@ -20,7 +22,13 @@ defineProps({
         {{ group.label[lang] }}
       </h3>
       <ul class="pb-1">
-        <ImpactRow v-for="item in group.items" :key="item.id" :item="item" :lang="lang" />
+        <ImpactRow
+          v-for="item in group.items"
+          :key="item.id"
+          :item="item"
+          :lang="lang"
+          @select="emit('select', $event)"
+        />
       </ul>
     </div>
   </section>

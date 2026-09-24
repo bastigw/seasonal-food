@@ -30,11 +30,15 @@ likely one:
 - **Domestic supply:** Eurostat annual production (incl. "under glass"),
   spread over the months the EUFIC seasonality matrix says the item is
   sold. Glasshouse output outside the field season counts as heated.
-- **Footprint:** per-item production value (approximate, after Poore &
-  Nemecek 2018 via Our World in Data) plus transport (distance x mode
-  factor, DEFRA/GLEC-style). Air-freight shares, glasshouse months and
-  production values are assumptions in `data/items.json` and should be
-  reviewed before quoting single numbers.
+- **Footprint:** production value plus transport (distance x mode factor,
+  DEFRA/GLEC-style). Production uses a real per-origin-country value from
+  [HESTIA](https://www.hestia.earth) aggregated data when the item's
+  dominant import origin that month has one (unheated scenarios only -
+  HESTIA doesn't distinguish heated glasshouse production); otherwise it
+  falls back to a flat per-item value (approximate, after Poore & Nemecek
+  2018 via Our World in Data). Air-freight shares, glasshouse months and
+  the flat production values are assumptions in `data/items.json` and
+  should be reviewed before quoting single numbers.
 
 Known limitations: exports of domestic produce are ignored; UK production
 data ends 2019/2020; Comext has no transport-mode data, so air freight is
@@ -44,8 +48,10 @@ an explicit per-item assumption.
 
 - `data/items.json` - curated items, footprints, thresholds, transport
   factors. `data/origins.json` - origin coordinates and road/sea mode.
-- `data/raw/` - committed snapshot of the downloaded trade and production
-  data. Refresh with `python3 -m pipeline.fetch` (needs network).
+- `data/raw/` - committed snapshot of the downloaded trade, production and
+  HESTIA emissions data. Refresh with `python3 -m pipeline.fetch` (needs
+  network; the HESTIA job additionally needs `pip install duckdb` to read
+  the Parquet file it downloads - fetch-time only, not needed to build).
 - `pipeline/` - pure-Python (stdlib only) model: `scenarios.py`,
   `footprint.py`, `build.py` (offline; writes
   `frontend/src/data/impact.json`). Tests: `python3 -m unittest discover

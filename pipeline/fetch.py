@@ -8,9 +8,14 @@ Sources:
   Eurostat Comext DS-045409   monthly imports into DE by origin (kg)
   HMRC uktradeinfo OTS        monthly imports into GB by origin (kg net mass)
   Eurostat apro_cpsh1         annual harvested production (thousand tonnes)
+  HESTIA aggregated data      per-country crop production GWP100 (kg CO2e/kg)
+                              via the public AWS Open Data bucket (no auth).
+                              Needs the `duckdb` package (fetch-time only;
+                              pipeline/build.py stays dependency-free).
 """
 import json
 import sys
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -23,6 +28,27 @@ CONFIG = json.loads((ROOT / "data" / "items.json").read_text(encoding="utf-8"))
 COMEXT = "https://ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/DS-045409"
 CROPS = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/apro_cpsh1"
 HMRC = "https://api.uktradeinfo.com"
+
+# Newest release older than 182 days (HESTIA's own cutoff for publicly
+# available, non-preview data); check https://api.hestia.earth/settings/dataReleases
+# for newer ones as time passes.
+HESTIA_RELEASE = "2026-03-10"
+HESTIA_PARQUET = (
+    f"https://hestia-aggregated-data.s3.eu-west-2.amazonaws.com/"
+    f"data/parquet/releases/{HESTIA_RELEASE}/impacts.parquet"
+)
+# HESTIA's countryId is "GADM-<ISO3>"; map the ISO3 codes it actually uses
+# to the ISO2 codes this project keys everything else by.
+HESTIA_ISO3_TO_ISO2 = {
+    "ALB": "AL", "ARG": "AR", "AUS": "AU", "BGD": "BD", "BRA": "BR", "KHM": "KH",
+    "CAN": "CA", "CHN": "CN", "COL": "CO", "CRI": "CR", "CYP": "CY", "CIV": "CI",
+    "DOM": "DO", "ECU": "EC", "FRA": "FR", "DEU": "DE", "GHA": "GH", "HUN": "HU",
+    "IND": "IN", "IDN": "ID", "IRN": "IR", "IRL": "IE", "ITA": "IT", "KEN": "KE",
+    "LVA": "LV", "MYS": "MY", "MEX": "MX", "MMR": "MM", "NPL": "NP", "PAK": "PK",
+    "PER": "PE", "PRT": "PT", "ROU": "RO", "RUS": "RU", "ZAF": "ZA", "ESP": "ES",
+    "SWE": "SE", "TZA": "TZ", "THA": "TH", "TUR": "TR", "UKR": "UA", "GBR": "GB",
+    "USA": "US", "VNM": "VN",
+}
 
 
 def get(url: str, retries: int = 3) -> dict:
@@ -131,6 +157,40 @@ def fetch_production() -> dict:
     return out
 
 
+def fetch_hestia() -> dict:
+    """{itemId: {countryCode: {gwp100, qualityScore}}} for items with a hestiaProduct."""
+    import duckdb  # fetch-time only dependency; pip install duckdb
+
+    products = {i["hestiaProduct"]: i["id"] for i in CONFIG["items"] if i["hestiaProduct"]}
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet") as tmp:
+        print("hestia: downloading", HESTIA_PARQUET)
+        urllib.request.urlretrieve(HESTIA_PARQUET, tmp.name)
+        rows = duckdb.connect().execute(
+            """
+            SELECT productName, countryId, value, aggregatedQualityScore, aggregatedQualityScoreMax
+            FROM read_parquet(?)
+            WHERE section = 'impacts' AND termId = 'gwp100' AND productName IN ?
+            """,
+            [tmp.name, list(products)],
+        ).fetchall()
+
+    out: dict = {}
+    for product_name, country_id, value, score, score_max in rows:
+        iso3 = country_id.removeprefix("GADM-")
+        iso2 = HESTIA_ISO3_TO_ISO2.get(iso3)
+        if not iso2 or value is None:
+            continue  # skip "World" aggregate and any region we can't map
+        item_id = products[product_name]
+        out.setdefault(item_id, {})[iso2] = {
+            "gwp100KgPerKg": round(float(value), 4),
+            "qualityScore": float(score) / float(score_max) if score is not None else None,
+        }
+    for item_id, by_country in out.items():
+        print("hestia", item_id, len(by_country), "countries")
+    return out
+
+
 def main() -> None:
     RAW.mkdir(parents=True, exist_ok=True)
     only = set(sys.argv[1:])
@@ -139,6 +199,7 @@ def main() -> None:
         ("comext_EU", lambda: fetch_comext("EU27_2020", ref_only=True)),
         ("hmrc_GB", fetch_hmrc),
         ("production", fetch_production),
+        ("hestia_gwp100", fetch_hestia),
     )
     for name, fn in jobs:
         if only and name not in only:

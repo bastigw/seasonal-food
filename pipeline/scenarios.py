@@ -88,10 +88,13 @@ def domestic_volumes(item: dict, fresh: list, stored: list, total_t: float, glas
 
 
 def import_scenarios(item: dict, month: int, imports: dict, origins: dict, importer: dict,
-                     in_field_season: bool, transport_cfg: dict) -> tuple[dict, dict]:
-    """Returns ({scenario: kg}, {scenario: kg transport per kg produce, volume-weighted})."""
+                     in_field_season: bool, transport_cfg: dict) -> tuple[dict, dict, list]:
+    """Returns ({scenario: kg}, {scenario: kg transport per kg produce, volume-weighted},
+    [(origin, scenario, kg, transport per kg), ...] - the same volumes, unaggregated by
+    scenario, for a per-origin-country footprint breakdown)."""
     vol: dict = defaultdict(float)
     tr_weighted: dict = defaultdict(float)
+    origin_parts: list = []
     can_heat = item["productionHeatedKgPerKg"] is not None
     for origin, kg in imports.items():
         info = origins.get(origin)
@@ -115,8 +118,9 @@ def import_scenarios(item: dict, month: int, imports: dict, origins: dict, impor
                 continue
             vol[scen] += kg * share
             tr_weighted[scen] += kg * share * tr
+            origin_parts.append((origin, scen, kg * share, tr))
     transport = {s: tr_weighted[s] / vol[s] for s in vol}
-    return dict(vol), transport
+    return dict(vol), transport, origin_parts
 
 
 def probabilities(volumes: dict) -> dict:
