@@ -6,10 +6,19 @@ import LanguageSelect from './components/LanguageSelect.vue'
 import CountryTabs from './components/CountryTabs.vue'
 import MonthSwitcher from './components/MonthSwitcher.vue'
 import ImpactSection from './components/ImpactSection.vue'
+import DairyMeatSection from './components/DairyMeatSection.vue'
 import ItemDetailSheet from './components/ItemDetailSheet.vue'
 import { buildItemSeries } from './lib/impactSeries.js'
 
-const { countries, data } = impactData
+const { countries, data, dairyMeat } = impactData
+
+// kg CO2e per kg that fills a bar. Opening the dairy/meat comparison raises it
+// to the largest meat value, so the produce bars shrink to their true size.
+const BASE_SCALE_MAX = 3.2
+const dairyMeatOpen = ref(false)
+const scaleMax = computed(() =>
+  dairyMeatOpen.value ? Math.max(BASE_SCALE_MAX, ...dairyMeat.map((i) => i.kgCo2ePerKg)) : BASE_SCALE_MAX
+)
 
 function readHash() {
   const params = new URLSearchParams(window.location.hash.slice(1))
@@ -165,6 +174,7 @@ onBeforeUnmount(() => {
                 :title="t.vegetables"
                 :groups="impact.vegetable"
                 :lang="selectedLanguage"
+                :scale-max="scaleMax"
                 @select="openItemDetail"
               />
               <ImpactSection
@@ -172,11 +182,19 @@ onBeforeUnmount(() => {
                 :title="t.fruit"
                 :groups="impact.fruit"
                 :lang="selectedLanguage"
+                :scale-max="scaleMax"
                 @select="openItemDetail"
               />
             </template>
           </div>
         </Transition>
+
+        <DairyMeatSection
+          v-model:open="dairyMeatOpen"
+          :items="dairyMeat"
+          :lang="selectedLanguage"
+          :scale-max="scaleMax"
+        />
 
         <p class="pt-4 text-center text-xs text-stone-400 dark:text-stone-600 standalone:pt-2">
           {{ t.disclaimer }}

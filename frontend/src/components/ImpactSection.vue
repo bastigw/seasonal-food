@@ -6,6 +6,7 @@ defineProps({
   title: { type: String, required: true },
   groups: { type: Array, required: true },
   lang: { type: String, default: 'en' },
+  scaleMax: { type: Number, required: true },
 })
 
 const emit = defineEmits(['select'])
@@ -27,6 +28,7 @@ const emit = defineEmits(['select'])
           :key="item.id"
           :item="item"
           :lang="lang"
+          :scale-max="scaleMax"
           @select="emit('select', $event)"
         />
       </ul>

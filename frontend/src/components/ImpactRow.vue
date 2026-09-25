@@ -5,17 +5,16 @@ import { strings } from '../i18n/strings.js'
 const props = defineProps({
   item: { type: Object, required: true },
   lang: { type: String, default: 'en' },
+  // kg CO2e per kg that fills the track. Shared by the whole page so bars stay
+  // comparable, and raised when the dairy/meat comparison is open.
+  scaleMax: { type: Number, required: true },
 })
 
 const emit = defineEmits(['select'])
 
-// Fixed scale (kg CO2e per portion that fills the track), so a bar of the same
-// length means the same impact in every month and country.
-const SCALE_MAX = 1.6
-
 const t = computed(() => strings[props.lang])
-const width = computed(() => `${Math.max(4, Math.min(100, (props.item.kgCo2ePerPortion / SCALE_MAX) * 100))}%`)
-const value = computed(() => props.item.kgCo2ePerPortion.toFixed(2))
+const width = computed(() => `${Math.max(4, Math.min(100, (props.item.kgCo2ePerKg / props.scaleMax) * 100))}%`)
+const value = computed(() => props.item.kgCo2ePerKg.toFixed(2))
 const shortIsLikely = computed(() => props.item.probShort >= 0.5)
 const likelihood = computed(() => {
   const pct = Math.round((shortIsLikely.value ? props.item.probShort : props.item.probFar) * 100)
@@ -39,7 +38,9 @@ const barTone = {
     >
       <span class="text-sm leading-tight">{{ item.name[lang] }}</span>
       <span class="h-2.5 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
-        <span class="block h-full rounded-full" :class="barTone[item.tier]" :style="{ width }" />
+        <span
+          class="block h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
+          :class="barTone[item.tier]" :style="{ width }" />
       </span>
       <span class="text-right leading-tight">
         <span class="block text-sm font-semibold tabular-nums">

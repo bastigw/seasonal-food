@@ -6,7 +6,7 @@
 # Climate Impact of Produce
 
 A mobile-first webpage showing the estimated climate impact (kg CO2e per
-500 g) of the fruit and vegetables people typically buy in a supermarket,
+kg) of the fruit and vegetables people typically buy in a supermarket,
 for **Germany** and the **UK**, month by month. Each item shows a coloured
 bar (green / amber / red) for the footprint of its **most likely supply
 route** that month, plus how likely it is to have travelled a short or a
@@ -42,6 +42,14 @@ likely one:
   2018 via Our World in Data). Air-freight shares, glasshouse months and
   the flat production values are assumptions in `data/items.json` and
   should be reviewed before quoting single numbers.
+
+**Dairy & meat comparison:** a collapsed section at the bottom shows beef,
+lamb, cheese, farmed fish, pork, chicken, eggs and milk in the same unit.
+Opening it rescales the produce bars to the larger range. HESTIA's public
+aggregates carry no livestock products, so these are Poore & Nemecek 2018
+global means (farm to retail, via Our World in Data,
+`data/raw/poore_gwp100.json`), identical for DE and GB and assumed locally
+sourced. Beef is weighted 40% beef herd / 60% dairy herd.
 
 Known limitations: exports of domestic produce are ignored; UK production
 data ends 2019/2020; Comext has no transport-mode data, so air freight is

@@ -26,6 +26,8 @@ SOURCES = {
     "production": "Eurostat apro_cpsh1 harvested production (latest 3 years; UK ends 2019/2020)",
     "seasonality": "EUFIC seasonal produce matrix",
     "footprint": "Poore & Nemecek 2018 (via Our World in Data) category medians, adjusted; DEFRA/GLEC transport factors (approximate)",
+    "dairyMeat": "Poore & Nemecek 2018 (via Our World in Data) global mean farm-to-retail footprints; "
+                 "same value for DE and GB, assumed locally sourced",
     "footprintOrigin": "HESTIA aggregated data (hestia.earth), release 2026-03-10, where a real "
                         "per-origin-country value exists, else the value of a comparable proxy country "
                         "(marked as such), else Poore & Nemecek category median",
@@ -42,10 +44,10 @@ SOURCE_RANK = {"country": 0, "proxy": 1, "estimate": 2}  # weakest tier wins whe
 
 
 def build_origin_breakdown(item: dict, country_code: str, dom_month: dict, imp_origin_parts: list,
-                           domestic_km: float, cfg: dict, hestia: dict, portion: float, total_kg: float) -> list:
+                           domestic_km: float, cfg: dict, hestia: dict, total_kg: float) -> list:
     """Per-origin-country footprint for one item/month: the top supplying
     countries (imports plus, if any, the country's own domestic production)
-    each with their own kg CO2e/portion - not the single blended "top
+    each with their own kg CO2e/kg - not the single blended "top
     scenario" value, so e.g. Colombian vs. Costa Rican bananas show up as
     their own real numbers instead of one averaged-away figure."""
     rows: dict = {}  # origin -> {"kg": float, "co2Weighted": float, "source": str, "proxy": str | None}
@@ -77,7 +79,7 @@ def build_origin_breakdown(item: dict, country_code: str, dom_month: dict, imp_o
         row = {
             "code": origin,
             "share": round(r["kg"] / total_kg, 3),
-            "kgCo2ePerPortion": round((r["co2Weighted"] / r["kg"]) * portion, 3),
+            "kgCo2ePerKg": round(r["co2Weighted"] / r["kg"], 3),
         }
         # Only items HESTIA covers say where the production number came from;
         # for the rest every row would read "estimate", which is just noise.
@@ -93,7 +95,6 @@ def build_country(code: str, cfg: dict, trade: dict, production: dict, origins: 
                   ref: dict, hestia: dict) -> dict:
     importer = cfg["countries"][code]
     years = cfg["years"]
-    portion = cfg["portionKg"]
     result = {str(m): {"vegetable": {}, "fruit": {}} for m in range(1, 13)}
 
     for item in cfg["items"]:
@@ -137,23 +138,23 @@ def build_country(code: str, cfg: dict, trade: dict, production: dict, origins: 
             # otherwise the single largest import origin this month.
             origin = code if top.startswith("domestic") else (
                 max(imports, key=imports.get) if imports else None)
-            kg_per_portion = scenario_kg_per_kg(item, top, transport, cfg["transport"], origin, hestia) * portion
-            production_portion = production_kg_per_kg(item, top, origin, hestia) * portion
-            storage_portion = cfg["transport"]["storageKgPerKg"] * portion if top == "domestic_stored" else 0.0
-            transport_portion = transport * portion
+            kg_per_kg = scenario_kg_per_kg(item, top, transport, cfg["transport"], origin, hestia)
+            production_kg = production_kg_per_kg(item, top, origin, hestia)
+            storage_kg = cfg["transport"]["storageKgPerKg"] if top == "domestic_stored" else 0.0
+            transport_kg = transport
             imp_total = sum(imports.values())
             conf = confidence(probs, total < THIN_MONTH_SHARE * avg_month,
                               unknown / imp_total if imp_total else 0.0)
             origin_breakdown = build_origin_breakdown(
-                item, code, domestic.get(m, {}), imp_origin_parts, DOMESTIC_KM, cfg, hestia, portion, total)
+                item, code, domestic.get(m, {}), imp_origin_parts, DOMESTIC_KM, cfg, hestia, total)
             result[str(m)][item["category"]].setdefault(item["group"], []).append({
                 "id": item["id"],
                 "name": item["name"],
-                "kgCo2ePerPortion": round(kg_per_portion, 3),
-                "productionKgPerPortion": round(production_portion, 3),
-                "transportKgPerPortion": round(transport_portion, 3),
-                "storageKgPerPortion": round(storage_portion, 3),
-                "tier": tier(kg_per_portion, cfg["tierThresholdsPerPortion"]),
+                "kgCo2ePerKg": round(kg_per_kg, 3),
+                "productionKgPerKg": round(production_kg, 3),
+                "transportKgPerKg": round(transport_kg, 3),
+                "storageKgPerKg": round(storage_kg, 3),
+                "tier": tier(kg_per_kg, cfg["tierThresholdsPerKg"]),
                 "scenario": top,
                 "probShort": round(sum(p for s, p in probs.items() if s in SHORT), 3),
                 "probFar": round(sum(p for s, p in probs.items() if s in FAR), 3),
@@ -168,7 +169,7 @@ def build_country(code: str, cfg: dict, trade: dict, production: dict, origins: 
                 {
                     "group": gid,
                     "label": {"en": en, "de": de},
-                    "items": sorted(month[category].get(gid, []), key=lambda i: i["kgCo2ePerPortion"]),
+                    "items": sorted(month[category].get(gid, []), key=lambda i: i["kgCo2ePerKg"]),
                 }
                 for gid, en, de in groups
                 if month[category].get(gid)
@@ -177,6 +178,9 @@ def build_country(code: str, cfg: dict, trade: dict, production: dict, origins: 
 
 
 def validate(out: dict) -> None:
+    assert len(out["dairyMeat"]) >= 8
+    for i in out["dairyMeat"]:
+        assert i["kgCo2ePerKg"] > 0, i
     for code, months in out["data"].items():
         assert set(months) == {str(m) for m in range(1, 13)}, code
         for month in months.values():
@@ -184,16 +188,25 @@ def validate(out: dict) -> None:
                 for group in month[category]:
                     for i in group["items"]:
                         assert i["tier"] in ("low", "medium", "high"), i
-                        assert i["kgCo2ePerPortion"] > 0, i
-                        parts = i["productionKgPerPortion"] + i["transportKgPerPortion"] + i["storageKgPerPortion"]
-                        assert abs(parts - i["kgCo2ePerPortion"]) < 0.01, i
+                        assert i["kgCo2ePerKg"] > 0, i
+                        parts = i["productionKgPerKg"] + i["transportKgPerKg"] + i["storageKgPerKg"]
+                        assert abs(parts - i["kgCo2ePerKg"]) < 0.01, i
                         assert 0 <= i["probShort"] <= 1 and 0 <= i["probFar"] <= 1, i
                         assert i["probShort"] + i["probFar"] <= 1.01, i
                         assert i["confidence"] in ("low", "medium", "high"), i
                         assert 1 <= len(i["originBreakdown"]) <= MAX_ORIGIN_ROWS, i
                         assert abs(sum(o["share"] for o in i["originBreakdown"])) <= 1.01, i
                         for o in i["originBreakdown"]:
-                            assert o["kgCo2ePerPortion"] > 0, i
+                            assert o["kgCo2ePerKg"] > 0, i
+
+
+def build_dairy_meat(cfg: dict, poore: dict) -> list:
+    """Local-sourced dairy/meat/fish reference footprints (kg CO2e/kg), highest first."""
+    items = []
+    for item in cfg["dairyMeat"]["items"]:
+        value = sum(poore[entity] * weight for entity, weight in item["poore"])
+        items.append({"id": item["id"], "name": item["name"], "kgCo2ePerKg": round(value, 2)})
+    return sorted(items, key=lambda i: -i["kgCo2ePerKg"])
 
 
 def build() -> dict:
@@ -204,6 +217,7 @@ def build() -> dict:
     ref = json.loads((RAW / "comext_EU.json").read_text(encoding="utf-8"))
     hestia_path = RAW / "hestia_gwp100.json"
     hestia = json.loads(hestia_path.read_text(encoding="utf-8")) if hestia_path.exists() else {}
+    poore = json.loads((RAW / "poore_gwp100.json").read_text(encoding="utf-8"))
     data = {}
     for code, fname in TRADE_FILES.items():
         trade = json.loads((RAW / fname).read_text(encoding="utf-8"))
@@ -213,9 +227,9 @@ def build() -> dict:
             {"code": c, "label": {"en": en, "de": de}, "flag": _flag(c)}
             for c, (en, de) in COUNTRY_LABELS.items()
         ],
-        "tiers": cfg["tierThresholdsPerPortion"],
-        "portionKg": cfg["portionKg"],
+        "tiers": cfg["tierThresholdsPerKg"],
         "sources": SOURCES,
+        "dairyMeat": build_dairy_meat(cfg, poore),
         "data": data,
     }
     validate(out)

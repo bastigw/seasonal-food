@@ -12,7 +12,12 @@ Sources:
                               via the public AWS Open Data bucket (no auth).
                               Needs the `duckdb` package (fetch-time only;
                               pipeline/build.py stays dependency-free).
+  Poore & Nemecek 2018        global mean farm-to-retail GHG per kg for animal
+                              products, via Our World in Data (CSV, no auth).
+                              HESTIA's public aggregates are crops only.
 """
+import csv
+import io
 import json
 import sys
 import tempfile
@@ -28,6 +33,7 @@ CONFIG = json.loads((ROOT / "data" / "items.json").read_text(encoding="utf-8"))
 COMEXT = "https://ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/DS-045409"
 CROPS = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/apro_cpsh1"
 HMRC = "https://api.uktradeinfo.com"
+POORE = "https://ourworldindata.org/grapher/ghg-per-kg-poore.csv?v=1&csvType=full&useColumnShortNames=false"
 
 # Newest release older than 182 days (HESTIA's own cutoff for publicly
 # available, non-preview data); check https://api.hestia.earth/settings/dataReleases
@@ -191,6 +197,20 @@ def fetch_hestia() -> dict:
     return out
 
 
+def fetch_poore() -> dict:
+    """{entity: kg CO2e per kg} for every food OWID lists from Poore & Nemecek 2018."""
+    req = urllib.request.Request(POORE, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        rows = csv.DictReader(io.StringIO(resp.read().decode("utf-8")))
+        out = {
+            r["Entity"]: float(r["Greenhouse gas emissions per kilogram"])
+            for r in rows
+            if r["Greenhouse gas emissions per kilogram"]
+        }
+    print("poore", len(out), "foods")
+    return out
+
+
 def main() -> None:
     RAW.mkdir(parents=True, exist_ok=True)
     only = set(sys.argv[1:])
@@ -200,6 +220,7 @@ def main() -> None:
         ("hmrc_GB", fetch_hmrc),
         ("production", fetch_production),
         ("hestia_gwp100", fetch_hestia),
+        ("poore_gwp100", fetch_poore),
     )
     for name, fn in jobs:
         if only and name not in only:

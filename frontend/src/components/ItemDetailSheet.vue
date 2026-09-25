@@ -42,17 +42,18 @@ const activeEntry = computed(() => props.series.find((s) => s.month === activeMo
 const activeItem = computed(() => activeEntry.value?.item ?? props.item)
 const activeMonthSummary = computed(() => {
   const label = activeMonth.value === props.currentMonth ? t.value.thisMonth : monthNamesLong.value[activeMonth.value - 1]
-  return `${label}: ${activeItem.value.kgCo2ePerPortion.toFixed(2)} kg CO₂e`
+  return `${label}: ${activeItem.value.kgCo2ePerKg.toFixed(2)} kg CO₂e/kg`
 })
 
 const CHART_W = 300
 const CHART_H = 150
-const PAD_X = 14
+const PAD_LEFT = 30 // room for the y-axis tick labels
+const PAD_RIGHT = 12
 const PAD_TOP = 22
 const PAD_BOTTOM = 22
 
 function xFor(monthIndex) {
-  return PAD_X + (monthIndex * (CHART_W - 2 * PAD_X)) / 11
+  return PAD_LEFT + (monthIndex * (CHART_W - PAD_LEFT - PAD_RIGHT)) / 11
 }
 
 // Break a series' points into contiguous "present" runs, so a month where
@@ -93,10 +94,23 @@ const originCodesInOrder = computed(() => {
   return codes
 })
 
-const chartScaleMax = computed(() => {
-  const values = props.series.flatMap((entry) => (entry.item?.originBreakdown ?? []).map((o) => o.kgCo2ePerPortion))
-  return Math.max(0.01, ...values) * 1.15
+// Round the axis to a "nice" step (1/2/5 x 10^n, about 4 intervals) so the
+// gridlines land on readable values and the top of the axis is a tick.
+const yAxis = computed(() => {
+  const values = props.series.flatMap((entry) => (entry.item?.originBreakdown ?? []).map((o) => o.kgCo2ePerKg))
+  const max = Math.max(0.01, ...values) * 1.05
+  const raw = max / 4
+  const pow = 10 ** Math.floor(Math.log10(raw))
+  const step = [1, 2, 5, 10].map((m) => m * pow).find((c) => c >= raw)
+  const top = Math.ceil(max / step) * step
+  const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step)
+  const decimals = step >= 1 ? 0 : Math.ceil(-Math.log10(step))
+  return { top, ticks, decimals }
 })
+const chartScaleMax = computed(() => yAxis.value.top)
+const yTicks = computed(() =>
+  yAxis.value.ticks.map((value) => ({ value, y: yFor(value), label: value.toFixed(yAxis.value.decimals) }))
+)
 
 function yFor(value) {
   const usable = CHART_H - PAD_TOP - PAD_BOTTOM
@@ -117,9 +131,9 @@ const originSeries = computed(() => {
       return {
         month: entry.month,
         present: !!row,
-        value: row ? row.kgCo2ePerPortion : null,
+        value: row ? row.kgCo2ePerKg : null,
         x: xFor(idx),
-        y: row ? yFor(row.kgCo2ePerPortion) : null,
+        y: row ? yFor(row.kgCo2ePerKg) : null,
       }
     })
     return {
@@ -161,7 +175,7 @@ const originRows = computed(() => {
 })
 // Bars scaled relative to the largest of the shown origins, so small
 // differences between countries are still visible.
-const originScaleMax = computed(() => Math.max(0.01, ...originRows.value.map((o) => o.kgCo2ePerPortion)))
+const originScaleMax = computed(() => Math.max(0.01, ...originRows.value.map((o) => o.kgCo2ePerKg)))
 
 function scenarioLabel(key) {
   return t.value[`scenario_${key}`] ?? key
@@ -172,11 +186,11 @@ function scenarioLabel(key) {
 // how the food was grown rather than how far it travelled.
 const breakdownParts = computed(() => {
   const it = activeItem.value
-  const total = it.kgCo2ePerPortion || 1
+  const total = it.kgCo2ePerKg || 1
   return [
-    { key: 'production', value: it.productionKgPerPortion, color: 'bg-stone-600 dark:bg-stone-300' },
-    { key: 'transport', value: it.transportKgPerPortion, color: 'bg-sky-500 dark:bg-sky-400' },
-    { key: 'storage', value: it.storageKgPerPortion, color: 'bg-violet-400 dark:bg-violet-400' },
+    { key: 'production', value: it.productionKgPerKg, color: 'bg-stone-600 dark:bg-stone-300' },
+    { key: 'transport', value: it.transportKgPerKg, color: 'bg-sky-500 dark:bg-sky-400' },
+    { key: 'storage', value: it.storageKgPerKg, color: 'bg-violet-400 dark:bg-violet-400' },
   ]
     .filter((p) => p.value > 0)
     .map((p) => ({ ...p, pct: Math.round((p.value / total) * 100) }))
@@ -313,6 +327,28 @@ function onDragEnd(event) {
           {{ t.yearChartTitle }}
         </h3>
         <svg :viewBox="`0 0 ${CHART_W} ${CHART_H}`" class="w-full" role="img" :aria-label="t.yearChartTitle">
+          <g aria-hidden="true">
+            <template v-for="tick in yTicks" :key="tick.value">
+              <line
+                :x1="PAD_LEFT"
+                :x2="CHART_W - PAD_RIGHT"
+                :y1="tick.y"
+                :y2="tick.y"
+                stroke-width="0.5"
+                :class="tick.value === 0 ? 'stroke-stone-300 dark:stroke-stone-600' : 'stroke-stone-200 dark:stroke-stone-800'"
+                :stroke-dasharray="tick.value === 0 ? undefined : '2 2'"
+              />
+              <text
+                :x="PAD_LEFT - 5"
+                :y="tick.y + 2.5"
+                text-anchor="end"
+                class="text-[8px] fill-stone-400 dark:fill-stone-500"
+              >
+                {{ tick.label }}
+              </text>
+            </template>
+            <text x="2" :y="PAD_TOP - 10" class="text-[7px] fill-stone-400 dark:fill-stone-500">kg CO₂e/kg</text>
+          </g>
           <template v-for="s in originSeries" :key="s.code">
             <path
               v-for="(d, i) in s.linePaths"
@@ -411,14 +447,14 @@ function onDragEnd(event) {
                 {{ o.name }} <span class="text-stone-400 dark:text-stone-500">· {{ Math.round(o.share * 100) }}%</span>
               </span>
               <span class="shrink-0 tabular-nums font-medium text-stone-700 dark:text-stone-200">
-                {{ o.kgCo2ePerPortion.toFixed(2) }} kg
+                {{ o.kgCo2ePerKg.toFixed(2) }} kg
               </span>
             </div>
             <span class="block h-1.5 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
               <span
                 class="block h-full rounded-full bg-stone-400 dark:bg-stone-500"
                 :class="o.proxyNote ? 'opacity-60' : ''"
-                :style="{ width: `${Math.max(4, (o.kgCo2ePerPortion / originScaleMax) * 100)}%` }"
+                :style="{ width: `${Math.max(4, (o.kgCo2ePerKg / originScaleMax) * 100)}%` }"
               />
             </span>
             <span v-if="o.proxyNote" class="mt-0.5 block text-[10px] italic text-stone-400 dark:text-stone-500">

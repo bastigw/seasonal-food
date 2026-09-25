@@ -59,9 +59,9 @@ def scenario_kg_per_kg(item: dict, scenario: str, transport: float, cfg: dict,
     return total
 
 
-def tier(kg_per_portion: float, thresholds: dict) -> str:
-    if kg_per_portion <= thresholds["lowMax"]:
+def tier(kg_per_kg: float, thresholds: dict) -> str:
+    if kg_per_kg <= thresholds["lowMax"]:
         return "low"
-    if kg_per_portion <= thresholds["mediumMax"]:
+    if kg_per_kg <= thresholds["mediumMax"]:
         return "medium"
     return "high"

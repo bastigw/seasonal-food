@@ -20,7 +20,7 @@ export function buildItemSeries(data, country, itemId) {
     if (found) latestItem = found
     series.push(
       found
-        ? { month, present: true, value: found.kgCo2ePerPortion, tier: found.tier, item: found }
+        ? { month, present: true, value: found.kgCo2ePerKg, tier: found.tier, item: found }
         : { month, present: false, value: null, tier: null, item: null }
     )
   }

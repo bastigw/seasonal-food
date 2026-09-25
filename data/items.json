@@ -7,10 +7,22 @@
   2024,
   2025
  ],
- "portionKg": 0.5,
- "tierThresholdsPerPortion": {
-  "lowMax": 0.35,
-  "mediumMax": 0.9
+ "tierThresholdsPerKg": {
+  "lowMax": 0.7,
+  "mediumMax": 1.8
+ },
+ "dairyMeat": {
+  "note": "Reference products for comparison, assumed sourced locally in both DE and GB (no transport model, no origin mix). Values are Poore & Nemecek 2018 global means, farm to retail, from data/raw/poore_gwp100.json; each item's poore list is [entity, weight] pairs. HESTIA's public aggregates carry no livestock products, so DE and GB share the same global mean. Beef is weighted 40% beef herd / 60% dairy herd, roughly the DE/GB mix.",
+  "items": [
+   {"id": "beef", "name": {"en": "Beef", "de": "Rindfleisch"}, "poore": [["Beef (beef herd)", 0.4], ["Beef (dairy herd)", 0.6]]},
+   {"id": "lamb", "name": {"en": "Lamb", "de": "Lammfleisch"}, "poore": [["Lamb & Mutton", 1]]},
+   {"id": "cheese", "name": {"en": "Cheese", "de": "Käse"}, "poore": [["Cheese", 1]]},
+   {"id": "farmed-fish", "name": {"en": "Farmed fish", "de": "Zuchtfisch"}, "poore": [["Fish (farmed)", 1]]},
+   {"id": "pork", "name": {"en": "Pork", "de": "Schweinefleisch"}, "poore": [["Pig Meat", 1]]},
+   {"id": "chicken", "name": {"en": "Chicken", "de": "Hähnchen"}, "poore": [["Poultry Meat", 1]]},
+   {"id": "eggs", "name": {"en": "Eggs", "de": "Eier"}, "poore": [["Eggs", 1]]},
+   {"id": "milk", "name": {"en": "Milk", "de": "Milch"}, "poore": [["Milk", 1]]}
+  ]
  },
  "transport": {
   "roadKgPerTkm": 0.12,

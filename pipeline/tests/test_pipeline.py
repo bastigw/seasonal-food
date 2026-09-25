@@ -33,8 +33,8 @@ class FootprintTests(unittest.TestCase):
                            scenario_kg_per_kg(tomato, "domestic_fresh", 0, t))
 
     def test_tier_thresholds(self):
-        th = CFG["tierThresholdsPerPortion"]
-        self.assertEqual([tier(0.2, th), tier(0.5, th), tier(1.5, th)], ["low", "medium", "high"])
+        th = CFG["tierThresholdsPerKg"]
+        self.assertEqual([tier(0.4, th), tier(1.0, th), tier(3.0, th)], ["low", "medium", "high"])
 
 
 class ScenarioTests(unittest.TestCase):
@@ -102,15 +102,15 @@ class GoldenTests(unittest.TestCase):
         self.assertGreater(feb["mix"].get("import_near_heated", 0), aug["mix"].get("import_near_heated", 0))
 
     def test_potato_beats_air_freighted_beans(self):
-        self.assertLess(self.item("GB", 2, "potato")["kgCo2ePerPortion"],
-                        self.item("GB", 2, "green-bean")["kgCo2ePerPortion"])
+        self.assertLess(self.item("GB", 2, "potato")["kgCo2ePerKg"],
+                        self.item("GB", 2, "green-bean")["kgCo2ePerKg"])
 
     def test_origin_breakdown_has_distinct_per_country_values(self):
         # Different supplying countries should show their own footprint,
         # not one blended-away number repeated for each row.
         rows = self.item("GB", 1, "banana")["originBreakdown"]
         self.assertGreater(len(rows), 1)
-        values = {r["kgCo2ePerPortion"] for r in rows}
+        values = {r["kgCo2ePerKg"] for r in rows}
         self.assertGreater(len(values), 1)
         shares = [r["share"] for r in rows]
         self.assertEqual(shares, sorted(shares, reverse=True))
@@ -119,8 +119,8 @@ class GoldenTests(unittest.TestCase):
         # GB imports bananas mostly from Colombia in January; HESTIA has a
         # real per-country value for that, which should override the item's
         # flat global productionFieldKgPerKg constant.
-        flat = ITEMS["banana"]["productionFieldKgPerKg"] * CFG["portionKg"]
-        self.assertNotAlmostEqual(self.item("GB", 1, "banana")["productionKgPerPortion"], flat, places=2)
+        flat = ITEMS["banana"]["productionFieldKgPerKg"]
+        self.assertNotAlmostEqual(self.item("GB", 1, "banana")["productionKgPerKg"], flat, places=2)
 
     def test_production_source_tiers(self):
         item = {**ITEMS["avocado"], "hestiaProxy": {"CL": "PE"}}
@@ -151,8 +151,25 @@ class GoldenTests(unittest.TestCase):
             for month in country.values():
                 for cat in ("vegetable", "fruit"):
                     for g in month[cat]:
-                        v = [i["kgCo2ePerPortion"] for i in g["items"]]
+                        v = [i["kgCo2ePerKg"] for i in g["items"]]
                         self.assertEqual(v, sorted(v))
+
+    def test_dairy_meat_reference_values(self):
+        rows = {i["id"]: i["kgCo2ePerKg"] for i in self.out["dairyMeat"]}
+        self.assertEqual(set(rows), {i["id"] for i in CFG["dairyMeat"]["items"]})
+        self.assertIn("farmed-fish", rows)
+        self.assertEqual(list(rows.values()), sorted(rows.values(), reverse=True))
+        self.assertAlmostEqual(rows["beef"], 0.4 * 99.48 + 0.6 * 33.3, places=1)
+        # The big animal products dwarf even air-freighted produce (milk and
+        # eggs per kg do not, which is why the page rescales rather than assuming).
+        worst_produce = max(
+            i["kgCo2ePerKg"]
+            for month in self.out["data"]["DE"].values()
+            for cat in ("vegetable", "fruit")
+            for g in month[cat]
+            for i in g["items"]
+        )
+        self.assertGreater(sorted(rows.values())[-4], worst_produce)
 
     def test_category_group_limits(self):
         self.assertLessEqual(len(CFG["groups"]["vegetable"]), 4)  # 3 + Other
